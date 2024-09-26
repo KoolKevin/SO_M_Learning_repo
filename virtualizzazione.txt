@@ -1,0 +1,86 @@
+In generale virtualizzare significa offrire una visione, diversa da quella reale, di un sistema hardware, interponendo un livello di indirezione tra l'utente e l'hw stesso.
+(impreciso non solo hardware)
+
+Una applicazione della virtualizzazione sono le macchine virtuali. Una VM è un oggetto virtuale che incorpora al suo interno, in modo esclusivo, una porzione, delle risorse
+fisiche.
+
+ESEMPI DI VIRTUALIZZAZIONE
+    - virtualizzazione a livello di processo    -> scheduling
+    - virtualizzazione della memoria            -> memoria virtuale
+    - ...
+
+EMULAZIONE
+altro esempio di virtualizzazione. Quando si ha la necessità di eseguire un programma compilato per una certa architettura, su una architettura diversa (ISA diverse) si 
+utilizza emulazione. Traduzione da istruzioni macchina sorgente(nintendo) a istruzioni macchina destinazione(pc x86_64).  
+
+interpretazione: traduzione di una istruzione alla volta, inefficenza  :( -> meglio ricompilazione dinamica: interpretazione a blocchi.
+NB: no compilazione statica perchè non si sa che codice viene chiamato in un determinato momento.   -> chat-gpt
+
+QEMU: nato in ambiente linux -> obiettivo: eseguire applicazioni windows
+
+LIVELLI DI VIRTUALIZZAZIONE
+    - virtual ISA:          programmi per un ISA che non possiedo hanno l'impressione di avere l'isa corretta
+    - virtual machine:      ogni macchina virtuale ha l'impressione di avere delle risorse hw dedicate, virtualizzazione dell'hardware
+    - container:            ogni container ha l'impressione di avere un proprio sistema operativo, virtualizzazione del sistema operativo
+    - virtual library:      ... chiedi a chat-gpt
+    - virtual application:  ... chiedi a chat-gpt
+
+MACCHINE VIRTUALI
+...
+
+PERCHè VIRTUALIZZIAMO?
+    - risparmio di spazio, costi, consumi, sprechi, ecc.
+    - più SO sulla stessa macchina
+    - isolamento
+        -> sandboxing
+        -> sicurezza
+    - gestione facilitata
+        -> Ogni macchina virtuale è rappresentata da una immagine persistente nel file system. Più istanze di una macchina virtuale utilizzando la stessa immagine
+        -> repository di immagini
+        -> Migrazione a caldo. Spostare una macchina virtuale da un nodo fisico(magari guasto) ad un altro per garantire continuità di servizio in caso di 
+           manutenzione/load-balancing/disaster-recovery. -> A caldo = illusione sempre online, anche in caso di trasferimento.
+
+--- REALIZZAZIONE DEL VMM
+Apriamo la scatola e capiamo come è possibile realizzare le vm.
+
+REQUISITI
+    - un programma per un macchina non virtuale deve eseguire allo stesso modo anche dentro una vm equivalente
+    - efficenza, forwarding delle istruzio
+    - Il kernel della macchina virtuale si trova ad eseguire in un ring che NON PUò essere quello di massimo privilegio, quello è riservato al VMM. Bisogna, garantire 
+      stabilità e sicurezza dell'intero sistema.
+        -> ring di protezione, stabiliscono quali istruzioni dell'ISA possono essere eseguite. In particolare le istruzioni privilegiate possono essere eseguite se
+           e solo se il ring di esecuzione corrente è quello di massimo privilegio.
+
+CLASSIFICAZIONE VMM
+    - Livello
+        -> VMM di sistema
+        -> VMM ospitati
+    - Modalità di dialogo, in che modo le VM interagiscono con il VMM
+        -> virtualizzazione pura: il codice (assembly) eseguito dalla vm è esattamento lo stesso di quello nel caso in cui la macchina non fosse virtuale. Posso installare
+                                  esattamente la stessa versione del SO che installerei in una macchina non virtuale.
+        -> para-virtualizzazione: assomiglia all'emulazione, il sistema operativo delle vm deve essere ricompilato per l'interfaccia esposta dal VM. Il codice (istruzioni)
+                                  privilegiate) deve adattarsi all'interfaccia del VMM. In questo caso devo usare una versione del SO specifica per il VMM.
+
+NB: il vmm è una sorta di kernel di un SO più leggera, in quanto non deve gestire funzionalità come file system oppure la gestione della memoria. Questo è possibile in quanto
+queste funzionalità sono responsabilità dei SO delle VM.
+
+VMM e RING
+il vmm deve essere l'unica componente autorizzata a controllare l'hw (istruzioni privilegiate) -> unica componente che esegue nel ring 0, il resto: ring > 0.
+
+Tuttavia in ogni vm abbiamo un kernel di un SO ed esso contiene istruzioni privilegiate. Come fanno ad eseguirle se non sono nel ring 0? -> ring deprivileging
+Inoltre, Ring compression ...
+
+SOLUZIONI A RING DEPRIVILEGING
+una prima soluzione è fare Trap&Emulate gestire le trap generate dal tentativo di esecuzioni privilegiate, senza essere nell'opportuno ring, dal VMM che farà forward della richiesta. 
+Se le cose vanno in questo modo diremo che l'architettura fornisce supporto nativo alla virtualizzazione, in quanto ogni chiamata ad istruzione privilegiata genera una 
+interruzione.
+
+    -> perchè si abilita la virtualizzazione nel BIOS? Si abilita la segnalazione tramite interrupt!
+
+Come facciamo se abbiamo architetture non virtualizzabili? -> soluzioni totalmente software
+    - Fast binary translation, si sostituiscono dinamicamente le chiamate a istruzioni privilegiate con chiamate equivalenti al vmm
+    - paravirtualizzazione, versione statica di quanto detto sopra -> i kernel dei SO per le VM devono essere ricompilati preventivamente per sostituire le chiamate
+      problematiche -> hypercall, system call al vmm. Pensabile come ad una forma di emulazione.
+        -> chiedi perchè qua si può fare compilazione statica ma con qemu no
+        -> xen è un vmm paravirtualizzato
+
