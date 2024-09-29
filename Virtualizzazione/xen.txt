@@ -1,0 +1,3 @@
+XEN
+...
+domain0 -> particolare vm che serve ad amministrare il resto del sistema
