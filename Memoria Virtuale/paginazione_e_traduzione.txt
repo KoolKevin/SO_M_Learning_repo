@@ -1,0 +1,57 @@
+TERMINOLOGIA
+virtual memory:     is what the program sees
+phisical memory:    the physical RAM on the computer
+virtual addresses:  indirizzi utilizzati dai programmi
+physical addresses: indirizzi utilizzati dall'hardware per comunicare con la RAM 
+
+--- PROCESSO DI TRADUZIONE
+come fa un programma ad accedere alla memoria fisica se vede solamente indirizzi virtuali?
+    -> attraverso un processo di traduzione degli indirizzi
+
+1) un programma specifica un determinato indirizzo in una delle sue istruzioni (ad es. load)
+    -> questo è un indirizzo virtuale
+2) il SO traduce questo indirizzo virtuale nel corrispondente inidirizzo fisico facendo una lookup all'interno di una tabella 
+    -> indirizzo virtuale diventa un indice nella tabella di traduzione
+2.5) (se l'indirizzo fisico punta al disco, la porzione di dati di interesse viene caricata in memoria mediante uno swap e la tabella
+      viene aggiornata con la nuova locazione)
+3) a questo punto il SO può accedere alla locazione di memoria fisica corretta in cui si trova il dato desiderato
+
+--- PAGE TABLES
+La struttura dati che associa indirizzi virtuali a indirizzi fisici si chiama page table.
+
+PRIMA PROBLEMATICA | DIMENSIONE DELLA PAGE TABLE
+se consideriamo una struttura dati unica per questo mapping, ovvero un'unica struttura che contiene tutte le traduzioni di ogni
+indirizzo virtuale, otterremmo una tabella con una entry per indirizzo virtuale 
+    -> consideriamo un sistema con 2^32 indirizzi virtuali
+    -> 4GiB occupati in memoria solo per la tabella di traduzione!!!
+    -> Come è possibile rendere questa tabella più maneggevole?
+
+Soluzione, salvare nella tabella blocchi di indirizzi (pages) per entry al posto di singoli indirrizzi
+    -> es. VA: 0-4095 -> PA: 4096-8191  -> pagine di 4kiB
+    -> necessarie molte meno entry nella tabella per coprire tutto lo spazio di indirizzamento
+        -> dim = 4GiB/4kiB = 1MiB di memoria occupata dalla tabella 
+
+NB: abbiamo ridotto notevolmente la dimensione della tabella ma abbiamo anche perso di flessibilità. Adesso l'unità minima di memoria
+che possiamo gestire è la pagine invece del singolo indirizzo. Questo significa che, ad esempio, operazioni di swap da e verso il disco
+devono caricare pagine di memoria
+
+NB: in generale più la dimensione delle pagine cresce più la dimensione della tabella diminuisce. Tuttavia allo stesso modo diminuisce
+anche la flessibilità nella gestione della memoria.
+
+SECONDA PROBLEMATICA | COME SI ACCEDE AD INDIRIZZI SPECIFICI DENTRO AD UNA PAGINA
+La gestione della memoria in pagine comporta anche che indirizzi fisici appartenenti alla stessa pagina diventano contigui in RAM.
+
+Quindi, se la pagina virtuale [0-4095] è mappata sulla pagina fisica [4096-8191], questo significa che all'indirizzo virtuale 4
+corrisponde l'indirizzo fisica 4100. 
+    -> L'indirizzi virtuale diventa un OFFSET per accedere alla corretta locazione FISICA DI MEMORIA  
+
+--- ADDRESS TRANSLATION
+Assumiamo di avere una macchina con uno spazio di indirizzamento di 32bit, 256kiB di memoria fisica, e pagine da 4kiB.
+Quindi, gli indirizzi virtuali saranno grandi 32 bit, mentre l'offset all'interno di una pagina sarà composto da 12 bit.
+
+La traduzione da indirizzo virtuale a indirizzo fisico consiste in:
+    - tradurre i 20 most significant bit (rimanenti da un indirizzo virtuale non considerando i bit di offset) che definiscono cio che
+      prende il nome di VIRTUAL PAGE NUMBER, nel corrispettivo PHYSICAL PAGE NUMBER. 
+        -> l'indice della PAGE TABLE diventa il VIRTUAL PAGE NUMBER
+        -> NB: In questo esempio abbiamo 2^20 pagine virtuali e 2^16 pagine fisiche. Le rimanenti pagine saranno salvate sul disco
+    - lasciare inalterati i 12 bit di offset

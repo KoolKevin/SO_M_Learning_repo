@@ -1,3 +1,17 @@
-XEN
-...
-domain0 -> particolare vm che serve ad amministrare il resto del sistema
+VMM open source che opera secondo i principi della paravirtualizzazione.
+    • Porting di Linux su XEN (XenoLinux, Suse, CentOs, …). Modifica del Kernel di Linux per dialogare con le API di XEN pari a circa 3000 linee di codice (1,36% del
+      totale).
+    • Porting di Windows XP (XenoXP) in collaborazione con Microsoft. Lavoro non completato.    
+    • Praticamente sono disponibili solo distribuzioni Linux come VM. 
+
+--- ARCHITETTURA DI XEN
+Sistema paravirtualizzato con virtualizzazione nativa.
+    • il vmm (hypervisor) si occupa della virtualizzazione della CPU, della memoria e dei dispositivi per ogni macchina virtuale (domain_i)
+    • Xen dispone di un'interfaccia di controllo in grado di gestire la divisione di queste risorse tra i vari domini. (praticamente console di virtualbox)
+    • L'accesso a questa interfaccia di controllo è ristretta; può essere controllata solamente utilizzando una VM dedicata a questo compito: domain 0. In questo dominio
+      viene eseguita l'applicazione software che gestisce il controllo di tutto il sistema.
+        -> domain0: particolare VM che serve ad amministrare il resto del sistema
+    • Il software di controllo nel domain 0 (dom0) è separato dallo stesso hypervisor -> separazione dei meccanismi dalle politiche.
+    
+    
+    
