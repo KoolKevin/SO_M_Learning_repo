@@ -11,4 +11,5 @@ Che cosa succede se un programma richiede accesso ad una pagina fisica non prese
           che gli serviva e quindi può eseguire.
 
 NB: questo è un processo molto lento siccome l'accesso al disco è molto più lento rispetto all'accesso in memoria. Se poi la pagina 
-da evictare è anche dirty gli accessi a disco diventano due, e quindi ancora peggio.
+da evictare è anche dirty gli accessi a disco diventano due, e quindi ancora peggio. Tuttavia sempre meglio che fare crashare il 
+programma perchè non c'è più spazio (anche se alcuni SO lo fanno -> OOM Killers)
