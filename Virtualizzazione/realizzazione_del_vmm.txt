@@ -141,13 +141,10 @@ e potenzialmente pericolose. Una qualsiasi violazione di questo comportamento pu
 catturandola, potrà correttamente gestirla, terminando ad esempio l’applicazione in esecuzione.
 
 PROTEZIONE DELLA MEMORIA
-
-    Segmentazione: ogni segmento è rappresentato da un descrittore in una tabella (Global Descriptor Table(GDT) o Local Descriptor Table(LDT)); nel descrittore sono indicati
-    il livello di protezione richiesto (PL) e i permessi di accesso (r,w,x).
-
+    Segmentazione: ogni segmento è rappresentato da un descrittore in una tabella (Global Descriptor Table(GDT) o Local Descriptor Table(LDT)); nel descrittore 
+    sono indicati il livello di protezione richiesto (PL) e i permessi di accesso (r,w,x).
 Una violazione dei vincoli di protezione provoca una eccezione. Cio’ accade, ad esempio, se il valore di CPL è maggiore del PL del segmento di codice contenente 
 l’istruzione invocata.
-
 
 --- GESTIONE DI VM
 Come abbiamo gia visto un VMM non è troppo diverso da un SO, alloca risorse fische agli utilizzatori (VM) al posto dei processi (utilizzatori classici).
