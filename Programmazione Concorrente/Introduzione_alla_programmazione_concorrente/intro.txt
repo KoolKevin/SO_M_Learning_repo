@@ -1,0 +1,98 @@
+DEFINIZIONE DI PROGRAMMAZIONE CONCORRENTE
+l'insieme delle tecniche, metodologie e strumenti per il supporto all'esecuzione di sistemi software composti da insiemi di attività
+svolte simultaneamente.
+
+TIPI DI ARCHITETTURA
+    • Shared-memory multiprocessors
+        - memoria condivisa tra le CPU (core)
+        - associabile ad un modello ad ambiente globale, ma non necessariamente
+    • Distributed memory
+        - memorie di proprietà unica del singolo nodo connesse mediante una rete
+        - 2 modelli:
+            -> Multicomputer : I processori e la rete sono fisicamente vicini (nella stessa struttura, Massively parallel computers)
+            -> Network systems: i nodi sono collegati da una rete locale (es.Ethernet) o da una rete geografica (Internet)
+        - associabile ad un modello ad locale, ma non necessariamente
+        - NB: I nodi di un distributed memory system possono essere o singoli processori o shared memory multiprocessor 
+            -> combinazione delle due architetture
+
+APPLICAZIONI CONCORRENTI
+L'architettura del sistema riguarda un piano INDIPENDENTE (trasparenza) rispetto a quello delle applicazioni che verranno eseguite
+al di sopra.
+
+a) Applicazioni multithreaded:
+        - Applicazioni strutturate come un insieme di processi (thread) per:
+            -> far fronte alla complessità
+            -> aumentare l'efficienza
+            -> semplificare la programmazione.
+        - I processi condividono memoria.
+        - I processi sono schedulati ed eseguiti indipendentemente.
+b) sistemi multitasking/ sistemi distribuiti:
+        -  Le componenti dell'applicazione (task) vengono eseguite su nodi (eventualmente virtuali) collegati tramite opportuni mezzi di
+        interconnessione (es. canali)
+        - I task comunicano scambiandosi messaggi e non condividono memoria
+
+OSS:
+Un sistema multithreaded è la naturale rappresentazione applicativa di un sistema multiprocessor
+Un sistema multitasking è la naturale rappresentazione applicativa di un sistema a memoria condivisa
+
+c) Applicazioni parallele:
+        - Obiettivo: risolvere un dato problema più velocemente sfruttando efficacemente il parallelismo disponibile a livello HW.
+        - Sono eseguite su sistemi paralleli (es. sistemi HPC, processori vettoriali) facendo uso di algoritmi paralleli.
+        - a seconda del modello architetturale, l’esecuzione è portata avanti da istruzioni/thread/processi paralleli che interagiscono
+        utilizzando librerie specifiche.
+        - NB: si perde la trasparenza riguardante cosa c'è a livello architetturale
+
+La macchina concorrente che il compilatore considera è diversa dalla effettiva macchina fisica che eseguirà il codice concorrente
+    -> virtualizzazione
+Tipicamente la macchina astratta ha un numero maggiore di unità di elaborazione rispetto a quella fisica.
+
+Due diverse organizzazioni logiche:
+    1. Gli elaboratori di M sono collegati ad un'unica memoria principale (v. sistemi multiprocessore)
+    2. Gli elaboratori di M sono collegati da una sottorete di comunicazione, senza memoria comune (v. sistemi distribuiti).
+Le due precedenti organizzazioni logiche di M definiscono due modelli di interazione tra i processi:
+    1. Modello a memoria comune, in cui l'interazione tra i processi avviene tramite oggetti contenuti nella memoria comune
+    2. Modello a scambio di messaggi, in cui la comunicazione e la sincronizzazione tra processi si basa sullo scambio di messaggi sulla
+        rete che collega i vari elaboratori
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+due modelli per esprimere la concorrenza: fork/join oppure cobegin/coend
+
+fork/join
+un po' piu potente -> in grado di rappresentare qualsiasi programma concorrente
+
+cobegin/coend
+non riesce a rappresentare un grafo di precedenza qualsiasi
+
+    -> infatti i linguaggi utilizzati fino ad adesso usano il modello fork/join
+
+
+--- PROPRIETà DEI PROGRAMMI
+programmi sequenziali e programmi concorrenti differiscono in quanto un programma sequenziale eseguito con lo stesso set di dati 
+produce sempre la stessa traccia
+    -> determinismo
+questo non è vero per programmi concorrenti, in quanto ci sono delle istruzioni in cui non si ha alcuna garanzia sull'ordine in cui
+vengono eseguite.
+    -> non determinismo
+
+nell'ambito della programmazione concorrente è importante andare oltre al debugging per valutare la correttezza di un programma
+    -> proprietà dei programmi
+
+SAFETY PROPERTIES
+non si entrerà mai in uno stato errato...
+
+LIVENESS PROPERTIES
+prima o poi si entrerà in uno stato corretto...
+
+...

@@ -1,0 +1,34 @@
+Processi interegenti sono caratterizzati da:
+    • Vincoli di sincronizzazione: vincolo imposti da ogni arco del grafo di precedenza che collega nodi di processi diversi.
+        - Due processi, quando arrivano ad un punto di interazione corrispondente ad uno scambio di informazioni, devono
+        sincronizzarsi, cioè ordinare i loro eventi come specificato dal grafo di precedenza.
+
+Le attività rappresentate dai processi possono essere:
+    • Completamente indipendenti
+        -> L'evoluzione di un processo non influenza quella degli altri.
+    • Interagenti
+        - Cooperazione:
+          comprende tutte le interazioni prevedibili e desiderate, insite cioè nella logica degli algoritmi (archi,
+          nel grafo di precedenza ad ordinamento parziale).
+           
+          Prevede scambio di informazioni:
+            -> segnali temporali (senza trasferimento di dati)
+            -> dati (messaggi) = comunicazione!
+          In entrambi i casi esiste un vincolo di precedenza (sincronizzazione) tra gli eventi di processi diversi
+            -> Sincronizzazione diretta o esplicita
+        - Competizione:
+          La macchina concorrente su cui i processi sono eseguiti mette a disposizione un numero limitato di risorse condivise tra
+          i processi. La competizione ha come obiettivo il coordinamento dei processi nell'accesso alle risorse condivise.
+
+          Ad esempio, per risorse che non possono essere usate contemporaneamente da più processi, è necessario prevedere meccanismi
+          che regolino la competizione. 
+            -> mutua esclusione
+
+            -> Interazione prevedibile e non desiderata, ma necessaria.
+            -> Sincronizzazione indiretta o implicita
+        - Interferenza:
+          interazione provocata da errori di programmazione. Ad esempio, deadlock. E` un'interazione non prevista e non desiderata
+
+NB: nella cooperazione i vincoli di precedenza sono noti a priori! Nel caso della competizione, in particolare nella mutua esclusione, 
+questi non sono noti. Essi si concretizzano quando si ha effettivamente la contesa sulla risorsa.
+

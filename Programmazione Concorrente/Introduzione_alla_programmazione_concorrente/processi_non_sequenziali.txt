@@ -1,0 +1,45 @@
+Definizione alternativa di processo: 
+insieme ORDINATO degli EVENTI cui dà luogo un elaboratore quando opera sotto il controllo di un programma.
+
+Un processo SEQUENZIALE è quindi caratterizzato dalla SEQUENZA di stati attraverso i quali passa l'elaboratore durante l'esecuzione 
+di un programma (storia di un processo o traccia dell'esecuzione del programma).
+
+Evento: Esecuzione di un'operazione tra quelle appartenenti all'insieme che l'elaboratore sa riconoscere ed eseguire;
+        ogni evento determina una transizione di stato dell'elaboratore.
+
+Elaboratore = macchina a stati
+    -> lo stato può essere cambiato da un evento
+    -> un evento viene generato dall'esecuzione di una istruzione di un programma
+
+NB: ordinato non vuol dire necessariamente sequenziale, esiste anche un ordinamente parziale contrapposto da un ordinamento totale
+
+GRAFO DI PRECEDENZA
+Più in generale, un processo può essere rappresentato tramite un grafo orientato detto grafo di precedenza del processo, costituito 
+da nodi ed archi orientati:
+    • I nodi del grafo rappresentano i singoli eventi del processo
+    • Gli archi orientati identificano le precedenze temporali tra tali eventi
+Ogni nodo rappresenta quindi un evento corrispondente all'esecuzione di un'operazione tra quelle appartenenti all'insieme che
+l'elaboratore sa riconoscere ed eseguire.
+
+PROCESSI NON SEQUENZIALI
+Esistono problemi che per loro natura sono caratterizzati da un ordinamento totale degli eventi.    -> processi sequenziali
+Tuttavia la maggior parte dei problemi non appartiene a questa categoria.                           -> processi NON sequenziali
+    -> ordinamento parziale = non è detto che ogni nodo abbia un solo antecedente
+
+Processo non sequenziale: l'insieme degli eventi che lo descrive e` ordinato secondo una relazione d'ordine parziale.
+
+In altre parole, certi eventi del processo sono tra loro scorrelati da qualunque relazione di precedenza temporale. Il risultato 
+dell'elaborazione è indipendente dall'ordine con cui gli eventi scorrelati avvengono.
+ 
+L'esecuzione di un processo non sequenziale richiede:
+    – Elaboratore non sequenziale (in grado di eseguire più operazioni contemporaneamente):
+        -> sistemi multiprocessore = reale parallelismo
+        -> sistemi monoprocessore  = time multiplexing
+    – Linguaggi non sequenziali (o concorrenti):
+        -> Caratteristica comune: consentire la descrizione di un insieme di attività, tramite moduli che possono essere
+        eseguiti concorrentemente
+
+
+LINGUAGGIO CONCORRENTI
+ogni linguaggio concorrente è caratterizzata da una granularità che specifica la dimensione tipica dell'unità di esecuzione 
+concorrente (modulo)
