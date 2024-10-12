@@ -54,18 +54,7 @@ Le due precedenti organizzazioni logiche di M definiscono due modelli di interaz
     2. Modello a scambio di messaggi, in cui la comunicazione e la sincronizzazione tra processi si basa sullo scambio di messaggi sulla
         rete che collega i vari elaboratori
 
-
-
-
-
-
-
-
-
-
-
-
-
+--- COSTRUTTI LINGUISTICI PER LA SPECIFICA DELLA CONCORRENZA
 
 due modelli per esprimere la concorrenza: fork/join oppure cobegin/coend
 
@@ -76,23 +65,3 @@ cobegin/coend
 non riesce a rappresentare un grafo di precedenza qualsiasi
 
     -> infatti i linguaggi utilizzati fino ad adesso usano il modello fork/join
-
-
---- PROPRIETà DEI PROGRAMMI
-programmi sequenziali e programmi concorrenti differiscono in quanto un programma sequenziale eseguito con lo stesso set di dati 
-produce sempre la stessa traccia
-    -> determinismo
-questo non è vero per programmi concorrenti, in quanto ci sono delle istruzioni in cui non si ha alcuna garanzia sull'ordine in cui
-vengono eseguite.
-    -> non determinismo
-
-nell'ambito della programmazione concorrente è importante andare oltre al debugging per valutare la correttezza di un programma
-    -> proprietà dei programmi
-
-SAFETY PROPERTIES
-non si entrerà mai in uno stato errato...
-
-LIVENESS PROPERTIES
-prima o poi si entrerà in uno stato corretto...
-
-...

@@ -1,0 +1,52 @@
+Una delle attività più importanti per chi sviluppa programmi è la verifica di CORRETTEZZA dei programmi realizzati.
+
+Cosa succede quando il programma viene eseguito?
+    - Traccia dell'esecuzione (Storia): sequenza degli stati attraversati dall'elaboratore durante l'esecuzione del programma.
+    - Stato: insieme dei valori delle variabili definite nel programma + variabili “implicite” (es. valore del Program counter).
+
+programmi sequenziali e programmi concorrenti differiscono in quanto un programma sequenziale eseguito con lo stesso set di dati 
+produce sempre la stessa traccia
+    -> determinismo
+    -> verifica della correttezza tramite debugging
+questo non è vero per programmi concorrenti, in quanto ci sono delle istruzioni in cui non si ha alcuna garanzia sull'ordine in cui
+vengono eseguite.
+    -> non determinismo
+    -> verifica più complicata
+
+Nell'ambito della programmazione concorrente è importante andare oltre al debugging per valutare la correttezza di un programma
+    -> proprietà dei programmi
+
+Una proprietà di un programma P è un attributo che è sempre vero, in ogni possibile traccia generata dall'esecuzione di P.
+In generale, le proprietà dei programmi si classificano in due categorie:
+    -Safety properties
+    -Liveness properties
+
+SAFETY PROPERTIES
+non si entrerà mai in uno stato errato...
+
+LIVENESS PROPERTIES
+prima o poi si entrerà in uno stato corretto...
+
+PROGRAMMI SEQUENZIALI:
+Le proprietà fondamentali che ogni programma sequenziale deve avere sono:
+    1. Correttezza del risultato finale: per ogni esecuzione il risultato ottenuto è giusto -> SAFETY
+    2. Terminazione: prima o poi l'esecuzione termina                                       -> LIVENESS
+
+PROGRAMMI CONCORRENTI:
+Le proprietà 1 e 2 sono fondamentali anche per i programmi concorrenti.
+In aggiunta, ogni programma concorrente deve presentare altre proprietà, come :
+    3. Mutua esclusione nell'accesso a risorse condivise:
+    per ogni esecuzione non accadrà mai che più di un processo accedacontemporaneamente alla stessa risorsa                       
+        -> SAFETY
+    4.Assenza di deadlock: 
+    per ogni esecuzione non si verificheranno mai situazioni di blocco critico
+        -> SAFETY
+    5. Assenza di starvation:
+    prima o poi ogni processo potrà accedere alle risorse richieste 
+        -> LIVENESS
+
+Il semplice testing su vari set di dati, per diverse ripetizioni dell'esecuzione non dimostra rigorosamente il soddisfacimento di
+proprietà.
+
+Possibile approccio per la verifica della correttezza di un programma concorrente è quindi:
+Specifica «formale» dei programmi concorrenti -> dimostrazione di proprietà.
