@@ -1,0 +1,67 @@
+### Proprietà che un programma che fa uso di semafori rispetta sempre
+Dato un semaforo S, siano:
+- vals: valore dell’intero non negativo associato al semaforo;
+- Is: valore intero≥0 con cui il semaforo s viene inizializzato;
+- nvs: numero di volte che l’operazione V(s) è stata eseguita;
+- nps: numero di volte che l’operazione P(s) è stata completata.
+Allora:
+
+    Relazione di invarianza: in qualunque istante nps è sempre <= di is + nvs
+        -> proprietà safety (sempre vera)
+
+Possiamo sfruttare questa relazione per dimostrare formalmente le proprietà dei programmi concorrenti che usano i semafori
+
+IL SEMAFORO NON é UNO STRUMENTO UTILIZZATO SOLAMENTE PER LA MUTUA ESCLUSIONE (STRUMENTO GENERALE PER QUALSIASI ESIGENZA DI SINCRONIZZAZIONE)
+
+Dimostrazione della mutua esclusione
+...
+c) questo requisito dice in un altro modo che non si può stabilire un ordine di accesso alla sezione critica
+
+## VARI TEMPLATE PER L'UTILIZZO DI SEMAFORI
+
+### Mutua esclusione tra gruppi di processi
+...
+quando voglio "leggere" lo stato della risorsa, ma non modificarlo, non c'è bisogno di mutua esclusione. Però voglio anche garantire mutua esclusione tra operazioni diverse.
+
+...
+esempio lettori/scrittori
+
+### implementazione dei vincoli di precedenza di un programma concorrente mediante semafori evento
+
+### rendez-vous
+
+    ... disegna anche le relazioni di precedenza senza semaforo
+
+### generalizzazione del rendez-vous
+non sappiamo a runtime quanti processi concorrenti saranno presenti, di conseguenza non sappiamo neanche quanti semafori usare
+
+soluzione: barriera di sincronizzazione 
+
+    barriera inizializzata a 0
+    ...
+    sincronizzazione a tornello, il precedente risveglia il successivo
+
+__NB__: questa è un'esigenza frequente. N processi devono aspettarsi prima di proseguire in una fase successiva.
+
+### SEMAFORI BINARI COMPOSTI: Scambio di dati
+non solo sincronizzazione ma anche sincronizzazione in funzione della comunicazione.
+
+    vu attesa del produttore
+    pn attesa del consumatore
+
+Semaforo binario composto, può essere generalizzato a n processi.
+In generale questo tipo di semaforo mi serve a dare un __ordine__ nell'accesso ad una risorsa condivisa 
+(al contrario della mutua esclusione)
+
+    metti foto che hai su whatsapp
+
+### CONDIZIONE
+...
+S2 = statement che può portare la condizione C a vero
+
+- attesa circolare
+    - while molto importante in quanto
+    - il processo risvegliante non necessariamente imposta la condizione a vera
+    - potrebbero esserci molti processi in attesa e non si sa chi viene risvegliato per primo. Essi possono riportare la condizione 
+    a false
+- passaggio del testimone 

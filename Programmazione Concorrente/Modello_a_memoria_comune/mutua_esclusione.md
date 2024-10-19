@@ -16,12 +16,9 @@ Questo è utile quando i processi eseguono operazioni differenti sulle variabili
 
 La regola di mutua esclusione stabilisce che: Sezioni critiche appartenenti alla stessa classe devono escludersi mutuamente nel tempo.
 
-
-
-
 ### Strumenti linguistici per la programmazione di interazioni
 
-IL SEMAFORO
+__IL SEMAFORO__
 strumento generale per risolvere qualunque problema di sincronizzazione nel modello a memoria comune.
 - Strumento software
 - non serve solo per la mutua esclusione
@@ -30,7 +27,7 @@ E’ realizzato dal nucleo della macchina concorrente:
 - L’eventuale attesa nell’esecuzione può essere realizzata utilizzando i meccanismi di gestione dei thread (sospensione, riattivazione) offerti dal nucleo.
 - E’ normalmente utilizzato per realizzare strumenti di sincronizzazione di livello più alto (es: condition).
 
-DEF: Un semaforo è una variabile __intera non negativa__, alla quale è possibile accedere solo tramite le due operazioni P e V.
+__DEF__: Un semaforo è una variabile __intera non negativa__, alla quale è possibile accedere solo tramite le due operazioni P e V.
 
 Specifica delle due operazioni:
 - void P(semaphore s): region s << when(vals > 0) vals--;>>
