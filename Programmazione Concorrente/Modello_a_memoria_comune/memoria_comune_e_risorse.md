@@ -16,7 +16,6 @@ Risorsa: qualunque oggetto, fisico o logico, di cui un processo necessita per po
     • ogni risorsa si identifica con una struttura dati (che la rappresenta) allocata nella memoria comune.
     (Vale anche per risorse fisiche: descrittore del dispositivo)
 
-
 ### Gestore di una risorsa
 Per ogni risorsa R, il suo gestore definisce, in ogni istante t, l’insieme SR(t) dei processi che, in tale istante, hanno il diritto di operare su R.
 

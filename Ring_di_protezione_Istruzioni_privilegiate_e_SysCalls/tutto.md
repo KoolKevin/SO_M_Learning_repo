@@ -56,3 +56,5 @@ The kernel code that starts following the trap examines the system-call number i
 Once it has completed its work, control may be returned to the user-space library procedure at the instruction following the trap instruction (step 9). This procedure then returns to the user program in the usual way procedure calls return (step 10), which then continues with the next instruction in the program (step 11).
 
 In step 9 above, we said __‘'may be returned to the user-space library procedure’’__ for good reason. The system call may block the caller, preventing it from continuing. For example, if it is trying to read from the keyboard and nothing has been typed yet, the caller has to be blocked. In this case, the operating system will look around to see if some other process can be run next. Later, when the desired input is available, this process will get the attention of the system and run steps 9 and 10.
+
+__OSS__: Le system call sono una potente astrazione che fornisce una interfaccia semplice ed efficace verso l'hardware ma hanno anche un costo riguardante il cambio di contesto tra User-mode e Kernel-mode. 
