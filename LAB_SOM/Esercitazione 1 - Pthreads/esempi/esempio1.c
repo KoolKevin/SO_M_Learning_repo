@@ -1,64 +1,65 @@
-
-//  esercitazione som 1.1
-
-
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-#define N 20
-#define K 4 // K = dimensione frazione
 
-// DATO CONDIVISO
-int V[N];
+#define N 20    // dimensione vettore
+#define K 4     // K = dimensione porzione del vettore in cui verrà effettuata una ricerca da parte di un singolo thread
+
+int V[N];       // DATO CONDIVISO
 
 // codice worker
 void* Calcolo(void* t) {
     int first, result=0;
-    first = (int)t;
+    
+    first = (int)t;     
 
     for (int i=first; i<first+K; i++)
         if (V[i]>result)
             result=V[i];
 
-    //printf("Worker ha calcolato il massimo locale: %d\n", result); 
+    printf("\tWorker:\tha calcolato il massimo locale: %d, operando su [%d; %d[\n", result, first, first+K); 
+
+    //TODO: prova a passare anche qua il puntatore ad intero
     pthread_exit((void*) result);
 }
 
 int main (int argc, char *argv[]) {
-    pthread_t thread[N/K];
-    int rc;
-    int M, t, first, status, max=0;
-	
-    M=N/K;	// M = numero thread
+    int rc, t, first, status, max=0;
+
+    int M=N/K;	// M = numero thread
+    pthread_t thread[M];
     srand(time(0)); 
 
     printf("inizializzazione vettore V:\n");
 	for(int i = 0; i < N; i++) {
 	   V[i] = 1+rand() % 200;
-	   printf("%d\t", V[i]);
+	   printf("v[%d] = %d\n", i, V[i]);
    	}	
     printf("\n");
     
+    // lancio degli M thread
     for(t=0; t<M; t++) {
-        printf("Main: creazione thread n.%d\n", t);
+        printf("Main:\tcreazione thread n. %d\n", t);
 	    first=t*K; // passo ad ogni thread l'indice del primo elemento da elaborare
 
         rc = pthread_create(&thread[t], NULL, Calcolo, (void *)first);
-        if (rc) {
-            printf("ERRORE: %d\n", rc);
-            exit(-1);   }
+        if (rc != 0) {
+            printf("ERRORE CREAZIONE: %d\n", rc);
+            exit(-1);   
+        }
     }
 
     for(t=0; t<M; t++) {
+        // se provi a togliere il cast a void * il compilatore si lamenta dicendo che vuole void **; che cazzo sta succedendo
         rc = pthread_join(thread[t], (void *)&status);
 
         //raccolgo in status il valore calcolato dal figlio
         if (rc)
-            printf("ERRORE join thread %ld codice %d\n", t, rc);
+            printf("ERRORE join thread %d codice %d\n", t, rc);
         else {
-            printf("Finito thread %ld con ris. %d\n",t,status);
+            printf("Finito thread %d con ris. %d\n", t, status);
 
             if (status>max)
                 max=status;
