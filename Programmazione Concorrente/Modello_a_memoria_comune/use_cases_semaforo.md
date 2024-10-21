@@ -29,8 +29,9 @@ esempio lettori/scrittori
 ### implementazione dei vincoli di precedenza di un programma concorrente mediante semafori evento
 
 ### rendez-vous
+![alt text](relazioni_di_precedenza_rendez-vouz.png)
 
-    ... disegna anche le relazioni di precedenza senza semaforo
+due semafori evento, uno per processo da sincronizzare
 
 ### generalizzazione del rendez-vous
 non sappiamo a runtime quanti processi concorrenti saranno presenti, di conseguenza non sappiamo neanche quanti semafori usare
@@ -50,10 +51,10 @@ non solo sincronizzazione ma anche sincronizzazione in funzione della comunicazi
     pn attesa del consumatore
 
 Semaforo binario composto, può essere generalizzato a n processi.
-In generale questo tipo di semaforo mi serve a dare un __ordine__ nell'accesso ad una risorsa condivisa 
-(al contrario della mutua esclusione)
 
-    metti foto che hai su whatsapp
+In generale questo tipo di semaforo mi serve a dare un __ordine nell'accesso ad una risorsa condivisa__  (al contrario della mutua esclusione)
+
+![alt text](semafori_binari_composti.png)
 
 ### CONDIZIONE
 ...
