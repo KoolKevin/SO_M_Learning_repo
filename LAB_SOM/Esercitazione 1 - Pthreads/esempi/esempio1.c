@@ -9,8 +9,14 @@
 
 int V[N];       // DATO CONDIVISO
 
+/*
+    Questa funzione ha tante responsabilità di gestione della memoria:
+        - libera la memoria passata come argomento t
+        - alloca la memoria per il risultato result
+*/
 void* Calcolo(void* t) {
     int first = *( (int *)t );  // prima cast e poi dereferenziazione
+    free(t);
 
     //result deve persistere dopo la terminazione della funzione e quindi lo alloco staticamente
     int *result = (int *)malloc(sizeof(int));
@@ -43,10 +49,21 @@ int main (int argc, char *argv[]) {
     // lancio degli M thread
     for(t=0; t<M; t++) {
         printf("Main:\tcreazione thread n. %d\n", t);
-        int first = t*K; // passo ad ogni thread l'indice del primo elemento da elaborare
-
+        int *first = (int *)malloc(sizeof(int));
+	    *first = t*K; // passo ad ogni thread l'indice del primo elemento da elaborare
         //dentro calcolo si dealloca first
-        rc = pthread_create(&thread[t], NULL, Calcolo, (void *)&first);
+        rc = pthread_create(&thread[t], NULL, Calcolo, (void *)first);
+
+        /*
+            NB: se facessi così:
+
+            int first = t*K; // passo ad ogni thread l'indice del primo elemento da elaborare
+            rc = pthread_create(&thread[t], NULL, Calcolo, (void *)&first);
+
+            thread diversi otterrebbero lo stesso riferimento a first e quindi si sovrascriverebbero a vicendo.
+            La soluzione che ho trovato è allocare first fuori per poi deallocarla dentro la funzione.
+                -> casino :(
+        */
         if (rc != 0) {
             printf("ERRORE CREAZIONE: %d\n", rc);
             exit(-1);   
