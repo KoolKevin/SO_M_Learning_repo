@@ -11,8 +11,8 @@ int V[N];       // DATO CONDIVISO
 
 void* Calcolo(void* t) {
     int first = *( (int *)t );  // prima cast e poi dereferenziazione
-    free(t);                    // importante che ogni thread deallochi il suo argomento altrimenti si sovrascrivono a vicenda
 
+    //result deve persistere dopo la terminazione della funzione e quindi lo alloco staticamente
     int *result = (int *)malloc(sizeof(int));
     *result = 0;
 
@@ -43,11 +43,10 @@ int main (int argc, char *argv[]) {
     // lancio degli M thread
     for(t=0; t<M; t++) {
         printf("Main:\tcreazione thread n. %d\n", t);
-        int *first = (int *)malloc(sizeof(int));
-	    *first = t*K; // passo ad ogni thread l'indice del primo elemento da elaborare
+        int first = t*K; // passo ad ogni thread l'indice del primo elemento da elaborare
 
         //dentro calcolo si dealloca first
-        rc = pthread_create(&thread[t], NULL, Calcolo, (void *)first);
+        rc = pthread_create(&thread[t], NULL, Calcolo, (void *)&first);
         if (rc != 0) {
             printf("ERRORE CREAZIONE: %d\n", rc);
             exit(-1);   
@@ -65,7 +64,8 @@ int main (int argc, char *argv[]) {
 
             if (*ris_parziale > max)
                 max = *ris_parziale;
-
+            
+            //dealloco la memoria che ho allocato per far persistere il risultato parziale
             free(ris_parziale);
         }
     }
