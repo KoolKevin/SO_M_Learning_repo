@@ -18,7 +18,7 @@ void* Calcolo(void* t) {
     int first = *( (int *)t );  // prima cast e poi dereferenziazione
     free(t);
 
-    //result deve persistere dopo la terminazione della funzione e quindi lo alloco staticamente
+    //result deve essere un puntatore e persistere dopo la terminazione della funzione e quindi lo alloco dinamicamente
     int *result = (int *)malloc(sizeof(int));
     *result = 0;
 
