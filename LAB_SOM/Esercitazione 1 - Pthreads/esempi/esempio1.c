@@ -9,24 +9,25 @@
 
 int V[N];       // DATO CONDIVISO
 
-// codice worker
 void* Calcolo(void* t) {
-    int first, result=0;
-    
-    first = (int)t;     
+    int first = *( (int *)t );  // prima cast e poi dereferenziazione
+    free(t);                    // importante che ogni thread deallochi il suo argomento altrimenti si sovrascrivono a vicenda
 
-    for (int i=first; i<first+K; i++)
-        if (V[i]>result)
-            result=V[i];
+    int *result = (int *)malloc(sizeof(int));
+    *result = 0;
 
-    printf("\tWorker:\tha calcolato il massimo locale: %d, operando su [%d; %d[\n", result, first, first+K); 
+    for (int i = first; i < first+K; i++)
+        if (V[i] > *result)
+            *result = V[i];
 
-    //TODO: prova a passare anche qua il puntatore ad intero
+    printf("\tWorker:\tha calcolato il massimo locale: %d, operando su [%d; %d[\n", *result, first, first+K); 
+
     pthread_exit((void*) result);
 }
 
 int main (int argc, char *argv[]) {
-    int rc, t, first, status, max=0;
+    int rc, t, max=0;
+    int *ris_parziale;
 
     int M=N/K;	// M = numero thread
     pthread_t thread[M];
@@ -42,8 +43,10 @@ int main (int argc, char *argv[]) {
     // lancio degli M thread
     for(t=0; t<M; t++) {
         printf("Main:\tcreazione thread n. %d\n", t);
-	    first=t*K; // passo ad ogni thread l'indice del primo elemento da elaborare
+        int *first = (int *)malloc(sizeof(int));
+	    *first = t*K; // passo ad ogni thread l'indice del primo elemento da elaborare
 
+        //dentro calcolo si dealloca first
         rc = pthread_create(&thread[t], NULL, Calcolo, (void *)first);
         if (rc != 0) {
             printf("ERRORE CREAZIONE: %d\n", rc);
@@ -52,17 +55,18 @@ int main (int argc, char *argv[]) {
     }
 
     for(t=0; t<M; t++) {
-        // se provi a togliere il cast a void * il compilatore si lamenta dicendo che vuole void **; che cazzo sta succedendo
-        rc = pthread_join(thread[t], (void *)&status);
+        rc = pthread_join(thread[t], (void **)&ris_parziale);
 
-        //raccolgo in status il valore calcolato dal figlio
+        //raccolgo in ris_parziale il valore calcolato dal figlio
         if (rc)
             printf("ERRORE join thread %d codice %d\n", t, rc);
         else {
-            printf("Finito thread %d con ris. %d\n", t, status);
+            printf("Finito thread %d con risultato parziale %d\n", t, *ris_parziale);
 
-            if (status>max)
-                max=status;
+            if (*ris_parziale > max)
+                max = *ris_parziale;
+
+            free(ris_parziale);
         }
     }
 
