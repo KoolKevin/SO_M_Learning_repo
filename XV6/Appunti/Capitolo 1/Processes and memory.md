@@ -28,3 +28,5 @@ A process that needs more memory at run-time (perhaps for malloc) can call sbrk(
 __Curiosità__: sbrk sta per "set break", ed è una chiamata di sistema storica che permette a un processo di modificare il limite (chiamato program break) della propria area di memoria dedicata ai dati. Più precisamente, sbrk è usata per espandere o ridurre l'area di memoria destinata all'heap, che è la zona in cui vengono allocate dinamicamente variabili e oggetti durante l'esecuzione (ad esempio tramite malloc in C).
 
 Quando un processo chiama sbrk(n), il kernel incrementa il "program break" di n byte, cioè estende (o riduce, se n è negativo) l'area di memoria disponibile al processo. La memoria aggiuntiva viene inizializzata a zero, e sbrk restituisce il puntatore all'inizio della nuova area di memoria allocata.
+
+__NB FINALE__: Xv6 does not provide a notion of users or of protecting one user from another; in Unix terms, __all xv6 processes run as root__. 
