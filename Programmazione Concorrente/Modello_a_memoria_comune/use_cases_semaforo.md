@@ -19,6 +19,10 @@ c) questo requisito dice in un altro modo che non si può stabilire un ordine di
 
 ## VARI TEMPLATE PER L'UTILIZZO DI SEMAFORI
 
+__NB__: in generale l'accesso al gestore va reso mutamente esclusivo, uso di semaforo mutex
+
+...
+
 ### Mutua esclusione tra gruppi di processi
 ...
 quando voglio "leggere" lo stato della risorsa, ma non modificarlo, non c'è bisogno di mutua esclusione. Però voglio anche garantire mutua esclusione tra operazioni diverse.
@@ -56,13 +60,25 @@ In generale questo tipo di semaforo mi serve a dare un __ordine nell'accesso ad 
 
 ![alt text](semafori_binari_composti.png)
 
-### CONDIZIONE
+### SEMAFORO CONDIZIONE
 ...
 S2 = statement che può portare la condizione C a vero
 
 - attesa circolare
-    - while molto importante in quanto
+    - while molto importante
     - il processo risvegliante non necessariamente imposta la condizione a vera
     - potrebbero esserci molti processi in attesa e non si sa chi viene risvegliato per primo. Essi possono riportare la condizione 
     a false
 - passaggio del testimone 
+    - risveglia un unico processo in quanto è solo quello che mantiene la mutua esclusione
+
+### SEMAFORO RISORSA
+semaforo utilizzato per la gestione di un pool di N risorse equivalenti
+
+...
+
+### SEMAFORE PRIVATO
+possiamo avere si che i processi richiedenti abbiano delle condizione di accesso alla risorsa condivisa basate su proprietà non solamente della risorsa stessa ma anche del singolo processo (i.e. priorità di un processo)
+
+nel momento in cui si creano le condizioni di risveglio si deve avere modo di selezionare quale dei tanti processi risvegliare in base a queste caratteristiche private
+
