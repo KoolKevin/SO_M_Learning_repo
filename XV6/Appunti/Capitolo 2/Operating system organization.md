@@ -1,0 +1,10 @@
+A key requirement for an operating system is to support several activities at once. For example, using the system call interface described in Chapter 1 a process can start new processes with fork . The operating system must __time-share the resources of the computer__ among these processes. For example, even if there are more processes than there are hardware CPUs, the operating system must ensure that all of the processes get a chance to execute. The operating system must also arrange for isolation between the processes. That is, if one process has a bug and malfunctions, it shouldn’t affect processes that don’t depend on the buggy process. Complete isolation, however, is too strong, since it should be possible for processes to intentionally interact; pipelines are an example. 
+    
+    Thus an operating system must fulfill three requirements: multiplexing, isolation, and interaction
+
+This chapter provides an overview of how operating systems are organized to achieve these three requirements. It turns out there are many ways to do so, but this text focuses on mainstream designs centered around a __monolithic kernel__, which is used by many Unix operating systems. This chapter also provides an overview of an __xv6 process, which is the unit of isolation in xv6__, and the creation of the first process when xv6 starts.
+
+### Dettagli macchina in xv6
+Xv6 runs on a __multi-core__ RISC-V microprocessor, and much of its low-level functionality (for example, its process implementation) is specific to RISC-V.  By “multi-core” this text means multiple CPUs that share memory but execute in parallel, each with its own set of registers.
+
+The CPU in a complete computer is surrounded by support hardware, much of it in the form of I/O interfaces. Xv6 is written for the support hardware simulated by qemu’s “-machine virt” option. This includes RAM, a ROM containing boot code, a serial connection to the user’s key-board/screen, and a disk for storage.
