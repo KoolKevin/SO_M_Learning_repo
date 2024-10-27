@@ -1,6 +1,7 @@
 When the RISC-V computer powers on, it initializes itself and runs a boot loader which is stored in read-only memory. __The boot loader loads the xv6 kernel into memory__. Then, __in machine mode__, the CPU executes xv6 starting at _\_entry_ (kernel/entry.S:7). 
 
-NB: The RISC-V computer starts with __paging hardware disabled__: virtual addresses map directly to physical addresses.
+NB: tutti i core eseguono quello che c'è in _\_entry_ma anche quello che c'è in _start.c_ è possibile differenziare il comportamento del codice tra i core mediante l'__hartid__.
+NB_2: The RISC-V computer starts with __paging hardware disabled__: virtual addresses map directly to physical addresses.
 
 ### Entry
 The loader loads the xv6 kernel into memory at physical address __0x80000000__. The reason it places the kernel at 0x80000000 rather than 0x0 is because the address range 0x0:0x80000000 contains __I/O devices__.
@@ -10,9 +11,12 @@ __The instructions at _\_entry_ set up a stack so that xv6 can run C code__. Xv6
     // entry.S needs one stack per CPU.
     __attribute__ ((aligned (16))) char stack0[4096 * NCPU];
 
-The code at _\_entry_ loads the stack pointer register _sp_ with the address _stack0+4096_, the top of the stack, because __the stack on RISC-V grows down__. 
+The code at _\_entry_ loads the stack pointer register _sp_ with the address _stack0+4096_ (se si ha solo un core), the top of the stack, because __the stack on RISC-V grows down__. 
 
-__NB__: When the bootloader loads the kernel into memory, it loads the entire binary image, which includes all initialized global variables and any statically allocated memory. This means that when control is transferred to the kernel at _\_entry_, the memory allocated for _stack0_ is already present in physical memory, even though _entry.S_ is the first assembly code that actually executes.
+### Stack setup con più core
+![alt text](immagini/stack_setup_in_entry.jpeg)
+
+__NB__: When the bootloader loads the kernel into memory, it loads the entire binary image, which includes all initialized global variables and any statically allocated memory. This means that when control is transferred to the kernel at _\_entry_, the memory allocated for _stack0_ is already present in physical memory, even though _entry.S_ is the first assembly code that actually executes (guarda _kernel.sym_ per vedere tutti i simboli disponibili dopo la compilazione).
 
 ### Start
 Now that the kernel has a stack, _\_entry_ calls into C code at start (kernel/start.c:15). The function start performs some configuration that is only allowed in machine mode, and then switches to supervisor mode. To enter supervisor mode, RISC-V provides the instruction __mret__. This instruction is most often used to return from a previous call from supervisor mode to machine mode. _start_ isn’t returning from such a call (start non è stata chiamata da una funzione in supervisor mode), but sets things up as if it were:
