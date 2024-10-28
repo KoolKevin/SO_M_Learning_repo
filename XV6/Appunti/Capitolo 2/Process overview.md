@@ -20,7 +20,14 @@ There are a number of factors that limit the maximum size of a process’s addre
 - and xv6 uses only 38 of those 39 bits. 
 Thus, the maximum address is 2^38 − 1 = 0x3fffffffff, which is _MAXVA_.
 
-At the top of the address space xv6 places a trampoline page (4096 bytes) and a trapframe page. Xv6 uses these two pages to transition into the kernel and back; the trampoline page contains the code to transition in and out of the kernel, and the trapframe is where the kernel saves the process’s user registers, as Chapter 4 explains.
+At the top of the address space xv6 places a __trampoline page__ (4096 bytes) and a __trapframe page__.
+
+    Xv6 uses these two pages to transition into the kernel and back
+
+- The trampoline page contains the code to transition in and out of the kernel
+- the trapframe is where the kernel saves the process’s user registers, as Chapter 4 explains.
+
+![alt text](immagini/layout_of_process_virtuale_address_space.png)
 
 ### Threads
 The xv6 kernel maintains many pieces of __state__ for each process, which it gathers into _struct proc_ (kernel/proc.h:85) . A process’s most important pieces of kernel state are its page table, its kernel stack, and its run state.
@@ -29,7 +36,7 @@ Each process has a thread of control (or thread for short) that holds the __stat
 
 Much of the state of a thread (local variables, function call return addresses) is stored on the thread’s stacks (notare il plurale). __Each process has two stacks__: a user stack and a kernel stack ( p->kstack ). When the process is executing user instructions, only its user stack is in use, and its kernel stack is empty. When the process enters the kernel (for a system call or interrupt), the kernel code executes on the process’s kernel stack; while a process is in the kernel, its user stack still contains saved data, but isn’t actively used. A process’s thread alternates between actively using its user stack and its kernel stack. The kernel stack is separate (and protected from user code) so that the kernel can execute even if a process has wrecked its user stack.
 
-A process can make a system call by executing the RISC-V _ecall_ instruction. This instruction raises the hardware privilege level and __changes the program counter to a kernel-defined entry point__. The code at the entry point __switches to the process’s kernel stack__ and executes the kernel
+**A process can make a system call by executing the RISC-V _ecall_ instruction**. This instruction raises the hardware privilege level and __changes the program counter to a kernel-defined entry point__. The code at the entry point __switches to the process’s kernel stack__ and executes the kernel
 instructions that implement the system call. When the system call completes, the kernel switches back to the user stack and returns to user space by calling the _sret_ instruction, which lowers the hardware privilege level and resumes executing user instructions just after the system call instruction. 
 
 OSS: A process’s thread can “block” in the kernel to wait for I/O, and resume where it left off when the I/O has finished.
