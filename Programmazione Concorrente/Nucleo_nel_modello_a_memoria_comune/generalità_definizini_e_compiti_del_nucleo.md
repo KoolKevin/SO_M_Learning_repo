@@ -21,7 +21,8 @@ multiprocessore, ecc.) __e da come il nucleo rappresenta e gestisce i processi c
 
 OSS: In un sistema multiprogrammato (o «a processi») vengono offerte tante unità di elaborazione astratte (macchine virtuali) quanti sono i processi.
 
-OSS_2: Il __nucleo è il solo modulo che è conscio dell'esistenza delle interruzioni__
+    NB: Il nucleo è il solo modulo che è conscio dell'esistenza delle interruzioni.
+
 - ogni processo che richiede un’operazione ad un dispositivo utilizza un’opportune primitiva del nucleo che provvede a sospenderlo in attesa del completamento dell'azione richiesta.
 - Quando l'azione è completata, un segnale di interruzione inviato dal dispositivo alla CPU viene catturato e gestito dal nucleo, che provvede a risvegliare il processo sospeso.
 - La gestione delle interruzioni è quindi invisibile ai processi ed ha come unico effetto rilevabile di rallentare la loro esecuzione sulle rispettive macchine virtuali.
