@@ -15,7 +15,7 @@ The exec system call replaces the calling process’s memory with a new memory i
 
 When exec succeeds, it does not return to the calling program; instead, the instructions loaded from the file start executing at the entry point declared in the ELF header.
 
-    exec, quando ha successo, è quasi come se sostituiesse il processo corrente con uno nuovo che esegue il programma specificato come se si fosse invocato quest'ultimo da linea di comando.
+    exec, quando ha successo, è quasi come se sostituisse il processo corrente con uno nuovo che esegue il programma specificato come se si fosse invocato quest'ultimo da linea di comando.
     
     In verità, non c'è creazione di un nuovo processo, ma l'immagine in memoria del processo chiamante viene sostituita con quella del programma desiderato. Rimangono poi invariati: PID, Ambiente e File aperti.
 
