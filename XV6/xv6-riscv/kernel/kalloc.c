@@ -54,6 +54,21 @@ kfree(void *pa)
   // Fill with junk to catch dangling refs.
   memset(pa, 1, PGSIZE);
 
+  /*
+      KKoltraka
+      Le 5 righe qua sotto, sono una maniera un po' contorta per creare una lista linkata delle pagine libere che però parte dall'ultima 
+      pagina in memoria. La variabile che rappresenta questa lista è kmem.freelist.
+        - Alla prima chiamata di kfree() abbiamo che kmem.freelist punta all'unica pagina che abbiamo appena liberato 
+          mentre kmem.freelist.next punta a NULL
+        - Alle invocazioni successive kmem.freelist puntarà alla pagina "più alta" libera, mentre kmem.freelist.next punterà alla pagina 
+          immediatamente sotto fino a raggiungere di nuovo NULL
+
+      NB: i puntatori alle pagina puntano al primo indirizzo della pagina, sono presenti quindi altri 4095 indirizzi 
+      NB_2: è interessante anche il fatto che in un certo senso la memoria considerata "libera" in realtà stia venendo utilizzata come una 
+      struttura dati! Attraverso il cast a (struct run*) diventa possibile assegnare ai primi 8 byte di ogni pagina libera l'indirizzo della 
+      prossima pagina libera. In sostanza ogni pagina libera diventa un nodo della lista linkata delle pagine libere. NON C'È STATO BISOGNO DI
+      USARE DELLA MEMORIA A PARTE PER TENERE TRACCIA DELLE PAGINE LIBERE.  
+  */
   r = (struct run*)pa;
 
   acquire(&kmem.lock);
