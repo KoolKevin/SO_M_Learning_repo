@@ -222,6 +222,12 @@ w_pmpaddr0(uint64 x)
 }
 
 // use riscv's sv39 page table scheme.
+/*
+  KKoltraka
+  per impostare la modalità di vm desiderata in xv6 (chiamata Sv39), bisogna scrivere nei 4 bit (bit di modalità) 
+  più alti del registro satp 1000, ovvero 8 shiftato di 60. A partire dai bit in fondo invece si specifica l'indirizzo
+  della page table del kernel
+*/
 #define SATP_SV39 (8L << 60)
 
 #define MAKE_SATP(pagetable) (SATP_SV39 | (((uint64)pagetable) >> 12))

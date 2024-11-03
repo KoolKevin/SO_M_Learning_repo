@@ -82,6 +82,15 @@ kvminithart()
 //   21..29 -- 9 bits of level-1 index.
 //   12..20 -- 9 bits of level-0 index.
 //    0..11 -- 12 bits of byte offset within the page.
+
+/*
+  KKoltraka:
+  Questa funzione è un pò un casino, innanzitutto ritorna solamente l'indirizzo della entry corretta dell'ultimo livello
+  in cui dovrà andare ad essere creato il mapping, non crea il mapping da se. In secondo luogo la struttura ad albero della
+  tabella delle pagine non è evidente.
+
+  Per questi motivi è molto utile tenere sotto la figura 3.2 del book quando si guarda questa funzione.
+*/
 pte_t *
 walk(pagetable_t pagetable, uint64 va, int alloc)
 {
@@ -89,16 +98,42 @@ walk(pagetable_t pagetable, uint64 va, int alloc)
     panic("walk");
 
   for(int level = 2; level > 0; level--) {
-    pte_t *pte = &pagetable[PX(level, va)];
+    /*
+      KKoltraka:
+      La macro PX ritorna semplicemente i 9 bit del va considerando il livello corrente.
+      L'intera riga: pte_t *pte = &pagetable[PX(level, va)]; considera quindi la entry di indice PX(level, va) nella page table
+      (ricorda che pagetable_t è un puntatore a uint64, si procede di 8 byte alla volta, esattamente la dimensione della entry)
+    */
+    pte_t *pte = &pagetable[PX(level, va)];   
+    /*
+        KKoltraka:
+        Se la entry trovata è valida passiamo al prossimo livello. 
+        Altrimenti, allochiamo il prossimo livello della pagetable e aggiorniamo e validiamo la entry corrente 
+        NB: pte adesso punta al primo elemento di questa nuova page
+      */
     if(*pte & PTE_V) {
       pagetable = (pagetable_t)PTE2PA(*pte);
     } else {
       if(!alloc || (pagetable = (pde_t*)kalloc()) == 0)
         return 0;
       memset(pagetable, 0, PGSIZE);
+      /*
+        KKoltraka:
+        La macro PA2PTE dato un indirizzo fisico elimina i 12 bit di offset e prepara i 10 bit di flag.
+        In sostanza trasforma l'indirizzo fisico in un formato adeguato per una PTE.
+
+        Qui si sotto si sta quindi facendo puntare (e si valida) la entry del livello precedente alla tabella appena
+        allocata nel livello corrente. 
+      */
       *pte = PA2PTE(pagetable) | PTE_V;
     }
   }
+
+  /*
+    KKoltraka:
+    Qua il ciclo è terminato e quindi pagetable fa riferimento all'ultimo livello. Ritorniamo quindi l'indirizzo della PTE che DOVRÀ (qua è
+    ancora tutto a zero) contenere il mapping con l'indirizzo fisico 
+  */
   return &pagetable[PX(0, va)];
 }
 
