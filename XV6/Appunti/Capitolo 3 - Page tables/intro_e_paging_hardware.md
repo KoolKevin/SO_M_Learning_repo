@@ -1,6 +1,6 @@
-Page tables are the most popular mechanism through which the operating system provides each process with its own __private address space and memory__. Page tables determine what memory ad dresses mean, and what parts of physical memory can be accessed. They allow xv6 to isolate different process’s address spaces and to multiplex them onto a single physical memory. 
+Page tables are the most popular mechanism through which the operating system provides each process with its own __private address space and memory__. Page tables determine what memory addresses mean, and what parts of physical memory can be accessed. They allow xv6 to isolate different process’s address spaces and to multiplex them onto a single physical memory. 
 
-Page ta bles are a popular design because they provide a level of indirection that allow operating systems to perform many __tricks__. Xv6 performs a few tricks: mapping the same memory (a trampoline page) in several address spaces, and guarding kernel and user stacks with an unmapped page.
+Page tables are a popular design because they provide a level of indirection that allow operating systems to perform many __tricks__. Xv6 performs a few tricks: mapping the same memory (a trampoline page) in several address spaces, and guarding kernel and user stacks with an unmapped page.
 
 ### Paging hardware
 As a reminder, RISC-V instructions (both user and kernel) manipulate virtual addresses. The machine’s RAM, or physical memory, is indexed with physical addresses. The RISC-V page table hardware connects these two kinds of addresses, by mapping each virtual address to a physical address.
@@ -22,12 +22,23 @@ The paging hardware uses the top 9 bits of the 27 bits to select a PTE in the ro
 ![alt text](immagini/real_physical_and_virtual_addresses_in_risc_V.png)
 
 #### Perchè paginazione a livelli?
-The three-level structure of Figure 3.2 allows a __memory-efficient way of recording PTEs__, com pared to the single-level design of Figure 3.1. In the common case in which large ranges of virtual addresses have no mappings, __the three-level structure can omit entire page directories__. For example, if an application uses only a few pages starting at address zero, then the entries 1 through 511 of the top-level page directory are invalid, and __the kernel doesn’t have to allocate pages those for 511 intermediate page directories__. Furthermore, the kernel also doesn’t have to allocate pages for the bottom-level page directories for those 511 intermediate page directories. So, in this example, the three-level design saves 511 pages for intermediate page directories and 511 × 512 pages for bottom-level page directories (chiaramente la top-level directory è un'unica pagina e quindi il kernel la deve allocare nella sua interezza).
+The three-level structure of Figure 3.2 allows a __memory-efficient way of recording PTEs__, compared to the single-level design of Figure 3.1. In the common case in which large ranges of virtual addresses have no mappings, __the three-level structure can omit entire page directories__. For example, if an application uses only a few pages starting at address zero, then the entries 1 through 511 of the top-level page directory are invalid, and __the kernel doesn’t have to allocate pages those for 511 intermediate page directories__. Furthermore, the kernel also doesn’t have to allocate pages for the bottom-level page directories for those 511 intermediate page directories. So, in this example, the three-level design saves 511 pages for intermediate page directories and 511 × 512 pages for bottom-level page directories (chiaramente la top-level directory è un'unica pagina e quindi il kernel la deve allocare nella sua interezza).
 
 From the kernel’s point of view, a page table is data stored in memory, and the kernel creates and modifies page tables using code much like you might see for any tree-shaped data structure.
 
 #### TLB
 Although a CPU walks the three-level structure in hardware as part of executing a load or store instruction, a potential downside of three levels is that the CPU must load three PTEs from memory to perform the translation of the virtual address in the load/store instruction to a physical address (accessi alla lenta memoria mutlipli per ogni load/store). To avoid the cost of loading PTEs from physical memory, __a RISC-V CPU caches page table entries__ (a quanto pare non direttamente le pagine, bisogna fare quindi un'accesso alla memoria? forse ci pensano le altre cache) in a __Translation Look-aside Buffer__ (TLB).
+
+Each RISC-V CPU caches page table entries in a TLB, and __when xv6 changes a page table__, it must tell the CPU to invalidate corresponding cached TLB
+entries. If it didn’t, then at some point later the TLB might use an old cached mapping, pointing to a physical page that in the meantime has been allocated to another process, and as a result, a process might be able to scribble on some other process’s memory.
+
+The RISC-V has an instruction _sfence.vma_ that flushes the current CPU’s TLB. Xv6 executes sfence.vma in kvminithart after reloading the satp register, and in the trampoline code that switches to a user page table before returning to user space (kernel/trampoline.S:89). xv6 non fa quindi una invalidazione minima della CPU ma è in grado solo di fare un flush globale.
+- To avoid flushing the complete TLB, RISC-V CPUs may support address space identifiers (ASIDs) [3]. The kernel can then flush just the TLB entries for a particular address space. __Xv6 does not use this feature__.
+
+It is also necessary to issue sfence.vma before changing satp, in order to wait for completion of all outstanding loads and stores. This wait ensures that preceding updates to the page table have completed, and ensures that preceding loads and stores use the old page table, not the new one. 
+
+- Quando sfence.vma viene eseguito, __la CPU si assicura__ che tutti i carichi e le memorizzazioni in corso siano completati prima di permettere ulteriori operazioni di accesso alla memoria. Questo è importante per evitare che carichi o memorizzazioni in sospeso (iniziati con la vecchia tabella delle pagine) vengano completati usando una nuova traduzione, che potrebbe essere errata.
+- In altre parole, il flush del TLB blocca il passaggio alla nuova tabella delle pagine fino a quando non sono terminati tutti gli accessi alla memoria che utilizzano la vecchia mappatura. In questo modo, si garantisce che non ci siano operazioni di memoria “miste” che usano traduzioni incoerenti.
 
 #### Flags
 Each PTE contains flag bits that tell the paging hardware how the associated virtual address is allowed to be used.
