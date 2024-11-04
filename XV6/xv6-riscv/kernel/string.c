@@ -27,6 +27,12 @@ memcmp(const void *v1, const void *v2, uint n)
   return 0;
 }
 
+/*
+  La funzione memmove è una funzione utilizzata per copiare blocchi di memoria da una posizione a un’altra.
+  
+  È simile alla funzione memcpy, ma ha una differenza fondamentale: gestisce correttamente la sovrapposizione 
+  delle aree di memoria sorgente e destinazione, evitando di corrompere i dati quando le due aree si sovrappongono.
+*/
 void*
 memmove(void *dst, const void *src, uint n)
 {
@@ -38,6 +44,7 @@ memmove(void *dst, const void *src, uint n)
   
   s = src;
   d = dst;
+  //controllo di sovrapposizione delle due aree di memoria e controllo della direzione di copia
   if(s < d && s + n > d){
     s += n;
     d += n;
