@@ -87,6 +87,10 @@ exec(char *path, char **argv)
   sp = sz;
   stackbase = sp - USERSTACK*PGSIZE;
 
+  /*
+    Nel popolamento dello stack qua sotto, si sta seguendo la figura 3.4
+  */
+
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
     if(argc >= MAXARG)
@@ -99,6 +103,7 @@ exec(char *path, char **argv)
       goto bad;
     ustack[argc] = sp;
   }
+  // null pointer alla fine dell'array che fa diventare la dimensione argc+1
   ustack[argc] = 0;
 
   // push the array of argv[] pointers.

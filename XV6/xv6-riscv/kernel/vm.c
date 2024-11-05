@@ -392,6 +392,11 @@ uvmclear(pagetable_t pagetable, uint64 va)
 // Copy from kernel to user.
 // Copy len bytes from src to virtual address dstva in a given page table.
 // Return 0 on success, -1 on error.
+
+/*
+  Il passaggio da kernel a user sta nel fatto che src è un puntatore a memoria del kernel
+  che sta venendo copiato nella memoria descritta nella pagetable del user
+*/
 int
 copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
 {
