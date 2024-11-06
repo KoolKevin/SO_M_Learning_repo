@@ -53,5 +53,13 @@ Siano:
 
 ![alt text](interruzione_inter-core.png)
 
+### Realizzazione dei semafori nel modello a nuclei distinti
+...
+nuova struttura dati: __Rappresentate del processo__!
+identifica in modo univoco un processo appartenente al sistema (multiprocessore)
+- traccia sia il nodo in cui esegue
+- che il PID del descrittore
+    - NB: il descrittore di un processo, nel modello a nuclei distinti, ha un campo d'azione ristretto al nodo in cui è presente (memoria privata) 
+- una sorta di coordinate del processo all'interno del sistema
 
-### Aggiungi schema prof
+... durante il risveglio di un processo c'è bisogno di una __comunicazione tra nuclei__(solo il kernel che ha sospeso il processo lo può risvegliare)
