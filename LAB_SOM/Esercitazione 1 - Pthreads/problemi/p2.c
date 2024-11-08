@@ -19,6 +19,7 @@ typedef struct{
 // variabili globali
 sondaggio s;
 char* MAX_FILM;
+
 sem_t barriera;
 int completati = 0;
 
