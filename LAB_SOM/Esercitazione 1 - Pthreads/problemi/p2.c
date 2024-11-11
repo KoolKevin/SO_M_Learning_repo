@@ -79,7 +79,7 @@ void* vota(void* arg) {
     } 
     pthread_mutex_unlock(&(s.mutex));
     sem_wait(&barriera);
-    sem_post(&barriera);
+    sem_post(&barriera);    // risveglio a tornello
 
     //scarico e vedo il film vincitore (variabile globale perchè non voglio ripetere il calcolo 10 volte)
     printf("Lo spettatore: %d sta scaricando il film vincitore: %s\n", spettatore, MAX_FILM);
