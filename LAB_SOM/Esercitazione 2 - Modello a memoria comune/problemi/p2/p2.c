@@ -75,6 +75,11 @@ void entrata(gruppo g) {
 
     printf("GRUPPO %d VUOLE ENTRARE\n", g.posizione_in_coda);  
 
+    /*  
+        OCCHIO!
+        qua la condizione controlla l'ordine di creazione e non l'effettivo ordine di entrata.
+        Bisognerebbe controllare l'array dei gruppi sospesi piuttosto
+    */
     while (p.posti_liberi < g.num_persone || p.auto_libere == 0 || g.posizione_in_coda != p.prossimo_gruppo) { 
         p.gruppi_sospesi[g.posizione_in_coda]++;
         printf("gruppo %d deve aspettare prima di entrare\n", g.posizione_in_coda);
@@ -106,6 +111,8 @@ void uscita(gruppo g) {
     printf("\n");
 
     for (int i=0; i<NUMERO_GRUPPI; i++) {
+        // ci sarebbe stato anche salvarsi nel gestori un contatore dei sospesi
+        // qua avevo prodotto un bug infatti dato che mi ero scordato questo controllo
         if(p.gruppi_sospesi[i] != 0)
             sem_post(&p.sem_condizione);
     }
