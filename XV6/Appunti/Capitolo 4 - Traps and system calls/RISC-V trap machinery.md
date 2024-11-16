@@ -11,7 +11,8 @@ Here’s an outline of the most important registers:
     - The SPP bit indicates whether a trap came from user mode or supervisor mode, and controls to what mode _sret_ returns.
 
 __NB__: The above registers relate to __traps handled in supervisor mode__, and they cannot be read or written in user mode.
-___NB_2__: Each CPU on a multi-core chip has its own set of these registers, and more than one CPU may be handling a trap at any given time.
+
+__NB_2__: Each CPU on a multi-core chip has its own set of these registers, and more than one CPU may be handling a trap at any given time.
 
 ### Cosa succede quando si verifica una trap?
 When it needs to force a trap, the RISC-V __hardware__(quindi in maniera __automatica__) does the following for all trap types:
@@ -24,7 +25,7 @@ When it needs to force a trap, the RISC-V __hardware__(quindi in maniera __autom
 7. Copy _stvec_ to the _pc_.
 8. Start executing at the new _pc_.
 
-__NB__: Note that the CPU
+__NB__: Note that the CPU:
 - doesn’t switch to the kernel page table
 - doesn’t switch to a stack in the kernel
 - and doesn’t save any registers other than the _pc_.

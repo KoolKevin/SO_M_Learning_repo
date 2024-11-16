@@ -97,6 +97,12 @@ usertrapret(void)
   intr_off();
 
   // send syscalls, interrupts, and exceptions to uservec in trampoline.S
+  /*
+    TRAMPOLINE                        = indirizzo virtuale
+    trampoline                        = indirizzo fisico definito dal linker in trampoline.S
+    uservec-trampoline                = offset del codice handler all'interno del codice del trampolino
+    TRAMPOLINE + (uservec-trampoline) = indirizzo virtuale effettivo dell'handler per le trap in userspace
+  */
   uint64 trampoline_uservec = TRAMPOLINE + (uservec - trampoline);
   w_stvec(trampoline_uservec);
 
