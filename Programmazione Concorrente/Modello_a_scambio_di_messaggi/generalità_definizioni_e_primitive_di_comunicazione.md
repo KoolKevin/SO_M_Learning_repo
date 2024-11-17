@@ -67,10 +67,23 @@ la semantica bloccante è il default nella maggior parte dei casi.
 ## Meccanismo di ricezione ideale | comando con guardia
 Un comando con guardia è una istruzione che i linguaggi di programmazione basati sul modello a scambio di messaggi prevedono.
 
-... un po' di roba
+### Comando con guardia alternativo
 
-__NB__: **non determinismo** nell'ordine di esecuzione dei rami con guardia valida quando ce ne è più di uno. Non esistono servizi/rami privilegiati.
+__Semantica__:
+Vengono __valutate le guardie di tutti i rami__. Si possono verificare 3 casi:
+1. se una o più guardie sono valide viene scelto, in maniera __non deterministica__, uno dei rami con guardia valida e la relativa guardia viene eseguita (cioè, viene eseguita la receive); viene quindi eseguita l'istruzione relativa al ramo scelto, e con ciò __termina l'esecuzione dell'intero comando alternativo__.
+    - Non esistono servizi/rami privilegiati.
 
-__NB_2__: se tutte le guardie sono fallite il comando con guardia termina.
+2. se tutte le guardie non fallite sono ritardate, il __processo in esecuzione si sospende__ in attesa che arrivi un messaggio che abilita la transizione di una guardia da ritardata a valida e a quel punto procede come nel caso precedente.
 
-__NB_3__: per uscire dal _do_ bisogna prevedere delle condizioni per ogni ramo
+3. se tutte le guardie sono fallite il comando termina.
+
+### Comando con guardia alternativo
+Vengono __valutate le guardie di tutti i rami__. Si possono verificare 3 casi:
+1. Se una o più guardie sono valide, come nel caso alternativo ma invece di terminare dopo l'esecuzione del ramo, si passa ad una iterazione sucessiva del comando.
+
+2. come nel caso alternativo, ma dopo l'arrivo di un messaggio che sblocca uno dei rami sospesi e l'esecuzione della relativa istruzione, si passa ad una nuova iterazione che rivaluta i rami che prima erano falliti.
+
+3. come nel caso alternativo
+
+__NB__: In questo coso, per uscire dal _do_ bisogna prevedere delle guardie logiche per ogni ramo. Il comando termina solo se tutte le guardie sono fallite. 
