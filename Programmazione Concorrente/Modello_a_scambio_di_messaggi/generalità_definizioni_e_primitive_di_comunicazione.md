@@ -87,3 +87,6 @@ Vengono __valutate le guardie di tutti i rami__. Si possono verificare 3 casi:
 3. come nel caso alternativo
 
 __NB__: In questo coso, per uscire dal _do_ bisogna prevedere delle guardie logiche per ogni ramo. Il comando termina solo se tutte le guardie sono fallite. 
+
+### OSS riguardo mutua eslcusione
+In questo modello il problema della mutua esclusione non si pone, perchè ...
