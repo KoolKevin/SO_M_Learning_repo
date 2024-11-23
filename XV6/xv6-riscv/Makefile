@@ -122,6 +122,9 @@ mkfs/mkfs: mkfs/mkfs.c $K/fs.h $K/param.h
 # http://www.gnu.org/software/make/manual/html_node/Chained-Rules.html
 .PRECIOUS: %.o
 
+# A quanto pare per aggiungere un nuovo user program basta 
+# aggiungere una entry qua sotto mantenendo lo stesso formato.
+# Mi raccomando, ultima entry senza \ finale 
 UPROGS=\
 	$U/_cat\
 	$U/_echo\
@@ -139,6 +142,7 @@ UPROGS=\
 	$U/_grind\
 	$U/_wc\
 	$U/_zombie\
+	$U/_my_hello 	# aggiunto
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

@@ -40,9 +40,11 @@ The code for the _uservec_ trap handler is in _trampoline.S_ (kernel/trampoline.
 
 __NB__: questi nomi sono alias i nomi veri sono x0, ..., x31
 
-#### A che cosa serve la pagina trampolino
+#### A che cosa serve la pagina trapframe?
 _uservec_’s next task is to save the 32 user registers. __The kernel allocates, for each process, a page of memory for a trapframe structure__ that (among other things) has space to save the 32 user registers (kernel/proc.h:43). Because _satp_ still refers to the user page table, _uservec_ needs
 the __trapframe to be mapped in the user address space__. Xv6 maps each process’s trapframe at virtual address TRAPFRAME in that process’s user page table; TRAPFRAME is just below TRAMPOLINE. The process’s p->trapframe also points to the trapframe, though at its physical address so the kernel can use it through the kernel page table (ricorda direct mapping).
+
+    In questo caso la trapframe page serve a salvare il contenuto dei registri gp del processo (contesto) prima del passaggio al kernel nella gestione della trap.
 
 Thus _uservec_ loads address TRAPFRAME into a0 and saves all the user registers there, including the user’s a0, read back from _sscratch_.
 

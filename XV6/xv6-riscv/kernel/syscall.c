@@ -102,6 +102,11 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 
+
+/*
+  sintassi che non conoscevo, a quanto pare in C si può inizializzare un array 
+  anche specificando tra quadre l'indice del valore
+*/
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
 static uint64 (*syscalls[])(void) = {
