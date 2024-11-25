@@ -468,6 +468,17 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
     if(n > max)
       n = max;
 
+    /*
+      KKoltraka
+      Da notare molto bene: in realtà, quelli che qua si stanno considerando come indirizzi fisici (pa0 e p)
+      sono comunque indirizzi virtuali mappati nella tabella delle pagine del kernel. Si possono lo stesso
+      pensare come indirizzi fisici dato che il kernel xv6 fa direct mapping.
+
+      Senza direct mapping avrebbe dovuto creare temporaneamente una nuova entry nella page table del kernel
+      con cui mappare l'indirizzo fisico recuperato con walkaddr. Se no, l'indirizzo fisico sarebbe stato considerando 
+      come virtuale dall'HW e sottoposto ad una traduzione automatica. Di conseguenza si sarebbe acceduto ad una locazione 
+      sbagliata della memoria fisica (in caso di entry presente), o nel migliore dei casi, si sarebbe ottenuta una page fault.  
+    */
     char *p = (char *) (pa0 + (srcva - va0));
     while(n > 0){
       if(*p == '\0'){
