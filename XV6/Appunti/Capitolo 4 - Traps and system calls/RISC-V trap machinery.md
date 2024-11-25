@@ -17,7 +17,7 @@ __NB_2__: Each CPU on a multi-core chip has its own set of these registers, and 
 ### Cosa succede quando si verifica una trap?
 When it needs to force a trap, the RISC-V __hardware__(quindi in maniera __automatica__) does the following for all trap types:
 1. If the trap is a device interrupt, and the _sstatus_ SIE bit is clear, don’t do any of the following.
-2. __Disable interrupts__ by clearing the SIE bit in _sstatus_.
+2. __Disable interrupts__ by clearing the SIE bit in _sstatus_ (**niente interrupt nidificati**).
 3. Copy the _pc_ to _sepc_.
 4. Save the current mode (user or supervisor) in the SPP bit in _sstatus_.
 5. Set _scause_ to reflect the trap’s cause.
