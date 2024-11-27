@@ -1,0 +1,3 @@
+...
+
+distinguiamo tra RPC (possibile necessità di sincronizzazione a carico del programmatore) e rendez-vouz esteso

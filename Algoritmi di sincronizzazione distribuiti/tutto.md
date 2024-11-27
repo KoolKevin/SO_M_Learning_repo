@@ -113,7 +113,7 @@ Algoritmo decentralizzato permission-based ...
 
 ...
 
-# DOMANDA: siamo sicuri che sia più scalabile? a me semba che tutti i nodi diventino una sorta di coordinatore
+**OSS**: Qua la scalabilità non sta nel numero di messaggi che ogni processo deve smaltire ma nel costo computazionale nel servire ogni richiesta; in questo algoritmo ogni processo deve decidere solo se dare o meno l'ok.
 
 Una volta capito che uno degli N nodi è fallito, il ripristino è molto semplice! Basta escludere il nodo guasto, niente elezione.
 
