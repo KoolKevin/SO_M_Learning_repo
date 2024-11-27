@@ -72,3 +72,87 @@ Ogni processo Pi mantiene localmente un **contatore del tempo logico Ci**, che v
 **OSS**: In questo modo, su nodi diversi, i timestamp sono ordinati solo tra gli eventi legati da una relazione di precedenza, Ma questo è il caso che ci interessa.
 
 Nei sistemi distribuiti l’algoritmo di Lamport viene generalmente eseguito da uno strato software (middleware) che interfaccia i processi alla rete: nella comunicazione tra processi diversi, essi vedono solamente il tempo logico degli altri.
+
+
+
+
+## Mutua esclusione distribuita
+Qua chiaramente il problema non si pone su delle variabili comuni (in un sistema distribuito i vari processi non condividono memoria)
+
+...
+
+Distinzione tra algoritmi centralizzati e decentralizzati
+
+...
+
+### Prima soluzione | centralizzata permission-based 
+...
+
+Due punti interessanti se il coordinatore si guasta ci sarebbe bisogno di una election per designare un nuovo coordinatore.
+
+Un richiedente non può distinguere se un coordinatore è guasto oppure se ci sta solo mettendo tanto tempo a concederli il permesso di accesso alla sezione critica.
+
+Soluzione: Appesantire la comunicazione con degli ack e usare un timeout (sugli ack e non sulla autorizzazione)
+
+### Algoritmo Ricart-Agrawala
+Algoritmo decentralizzato permission-based ...
+
+...
+
+1. n-1 richieste 
+2. n-1 autorizzazioni 
+3. esecuzione sezione critica
+4. al termine, invio di ok a tutte le richieste in attesa arrivate nel frattempo sul receiver
+
+**Struttura del receiver**:
+...
+
+... Interessante il caso wanted in cui si usa il timestamp di un orologio logico per determinare chi va prima 
+
+**OSS**: L'ordine con cui viene popolata la coda di un processo in stato held non conta!
+
+...
+
+# DOMANDA: siamo sicuri che sia più scalabile? a me semba che tutti i nodi diventino una sorta di coordinatore
+
+Una volta capito che uno degli N nodi è fallito, il ripristino è molto semplice! Basta escludere il nodo guasto, niente elezione.
+
+...
+
+### Algoritmo Token-ring
+...
+
+I processi sono organizzati, logicamente, secondo una topologia ad anello.
+
+
+...
+
+
+Il numero di messaggi può essere illimitato se tutti i processi sono released; il ciclo si rompe quando un processo entra in una sezione critica, a quel punto il numero di messaggi per quella sezione critica diventa molto elevato.
+
+Ragioniamo anche sulla fairness in questo caso; qua le richieste non vengono servite solamente in base all'ordine di formulazione, ma anche in base alla posizione dei processi richiedenti nella topologia! Token ring NON è fair. 
+
+
+
+
+
+## Algoritmi di elezione
+Applicabili in tutti gli algoritmi distribuiti centralizzati in cui esiste un processo coordinatore. 
+
+Negli algoritmi distribuiti centralizzati esiste un processo più importante rispetto agli altri che svolge il ruolo di coordinatore.
+
+Come viene individuato questo processo?
+
+...
+
+è possibile che più processi si accorgano che il coordinatore non sia più attivo?
+
+### Algoritmo bully 
+...
+
+prendere il controllo significa indirre a propria volta una elezione
+
+All'ultimo giro di elezione, il nodo che non risponde viene considerato guasto.
+
+### Algoritmo ad anello
+Attenzione qua la topologia ad anello è di nuovo logica, ma sopratutto vale solo per il funzionamento dell'algoritmo di elezione. Per il resto, i vari processi si conoscono l'un l'altro e possono comunicare direttamente
