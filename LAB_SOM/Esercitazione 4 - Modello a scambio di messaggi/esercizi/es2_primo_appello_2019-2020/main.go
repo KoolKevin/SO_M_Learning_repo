@@ -72,10 +72,10 @@ func when(b bool, c chan bool) chan bool {
 }
 
 func nastro(tipologia_nastro int) {
-	//ogni nastro devo produrre pnemuatici/cerchioni per TOT auto
-	for i := 0; i < TOT; i++ {
+	//ogni nastro devo produrre pnemuatici/cerchioni per 4 ruote di TOT auto
+	for i := 0; i < TOT*4; i++ {
 		// tempo di consegna del nastro
-		tt := rand.Intn(3) + 1
+		tt := rand.Intn(1) + 1
 		time.Sleep(time.Duration(tt) * time.Second)
 
 		switch tipologia_nastro {
@@ -90,13 +90,14 @@ func nastro(tipologia_nastro int) {
 		}
 	}
 
-	done <- true
+	// done <- true
 }
 
 func robot(tipologia_robot int) {
 	//ogni nastro devo montare pnemuatici/cerchioni per TOT auto
 	for continua := range continua_robot_chan {
 		if !continua {
+			fmt.Println("[ROBOT] mi interrompo")
 			break
 		}
 
@@ -114,6 +115,8 @@ func robot(tipologia_robot int) {
 		}
 	}
 
+	fmt.Println("[ROBOT] Non ho più niente da montare")
+
 	done <- true
 }
 
@@ -128,7 +131,7 @@ func deposito() {
 	conta_per_stampa_tipo_A := 0
 	conta_per_stampa_tipo_B := 0
 
-	// faccio procedere i robot
+	// attiva i robot
 	for i := 0; i < NUM_ROBOT; i++ {
 		continua_robot_chan <- true
 	}
@@ -171,19 +174,21 @@ func deposito() {
 			conta_per_stampa_tipo_A++
 
 			// controllo se devo fare andare avanti i robot o meno
-			if auto_finite == TOT {
-				for i := 0; i < NUM_ROBOT; i++ {
-					continua_robot_chan <- false
-				}
-			} else {
+			if auto_finite < TOT {
 				for i := 0; i < NUM_ROBOT; i++ {
 					continua_robot_chan <- true
 				}
+			} else {
+				for i := 0; i < NUM_ROBOT; i++ {
+					continua_robot_chan <- false
+				}
+
+				close(continua_robot_chan)
 			}
 
 			// stampa
 			if conta_per_stampa_tipo_A == 4 {
-				fmt.Println("------- FINITA AUTO NUMERO", auto_finite, "---------")
+				fmt.Printf("\n------- FINITA AUTO NUMERO %d -------\n\n", auto_finite)
 				conta_per_stampa_tipo_A = 0
 			}
 
@@ -197,14 +202,16 @@ func deposito() {
 			conta_per_stampa_tipo_B++
 
 			// controllo se devo fare andare avanti i robot o meno
-			if auto_finite == TOT {
-				for i := 0; i < NUM_ROBOT; i++ {
-					continua_robot_chan <- false
-				}
-			} else {
+			if auto_finite < TOT {
 				for i := 0; i < NUM_ROBOT; i++ {
 					continua_robot_chan <- true
 				}
+			} else {
+				for i := 0; i < NUM_ROBOT; i++ {
+					continua_robot_chan <- false
+				}
+
+				close(continua_robot_chan)
 			}
 
 			// stampa
@@ -236,7 +243,7 @@ func main() {
 	}
 
 	// aspetto che tutti abbiano terminato
-	for i := 0; i < NUM_NASTRI+NUM_ROBOT; i++ {
+	for i := 0; i < NUM_ROBOT; i++ {
 		<-done
 	}
 	termina_deposito <- true
