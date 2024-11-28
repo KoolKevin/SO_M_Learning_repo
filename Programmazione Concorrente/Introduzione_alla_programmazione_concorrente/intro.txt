@@ -26,6 +26,7 @@ a) Applicazioni multithreaded:
             -> semplificare la programmazione.
         - I processi condividono memoria.
         - I processi sono schedulati ed eseguiti indipendentemente.
+        
 b) sistemi multitasking/ sistemi distribuiti:
         -  Le componenti dell'applicazione (task) vengono eseguite su nodi (eventualmente virtuali) collegati tramite opportuni mezzi di
         interconnessione (es. canali)

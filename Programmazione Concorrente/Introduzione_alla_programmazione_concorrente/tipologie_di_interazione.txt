@@ -23,7 +23,6 @@ Le attività rappresentate dai processi possono essere:
           Ad esempio, per risorse che non possono essere usate contemporaneamente da più processi, è necessario prevedere meccanismi
           che regolino la competizione. 
             -> mutua esclusione
-
             -> Interazione prevedibile e non desiderata, ma necessaria.
             -> Sincronizzazione indiretta o implicita
         - Interferenza:

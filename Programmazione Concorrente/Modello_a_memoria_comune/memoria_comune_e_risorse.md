@@ -1,8 +1,3 @@
-### MODELLI DI INTERAZIONE TRA PROCESSI (CONCORRENTI)
-    • Modello a memoria comune (ambiente globale, shared memory)
-    • Modello a scambio di messaggi (ambiente locale, distributed memory)
-due modelli di interazione utilizzati per gestire la comunicazione e la sincronizzazione tra processi o thread che eseguono operazioni simultaneamente.
-
 ### MODELLO A MEMORIA COMUNE
 Il modello a memoria comune rappresenta la naturale astrazione del funzionamento di un sistema in multiprogrammazione costituito da uno o più processori che hanno accesso ad una memoria comune. Ad ogni processore può essere associata una memoria privata, ma ogni interazione avviene tramite oggetti contenuti nella memoria comune.
 
