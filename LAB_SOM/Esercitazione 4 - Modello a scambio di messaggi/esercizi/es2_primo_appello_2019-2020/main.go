@@ -1,16 +1,5 @@
 /*
-	- 2 modelli di auto (modelloA e modelloB)
-	- 4 nastri trasportatori (1 per ogni tipologia di cerchio e pneumatico)
-	- Il deposito è caratterizzato da capacità:
-		- MaxP
-		- MaxC
-	- montaggio con due bracci (uno per modello)
-	- Per il montaggio delle ruote di un’auto*, ognuno dei due robot procede quindi come segue. Per ognuna delle 4 ruote:
-		• preleva un cerchio e lo monta;
-		• preleva uno pneumatico e lo monta.
-
-	Il deposito dovrà gestire gli accessi da parte dei nastri e dei robot in modo da soddisfare i vincoli dati,
-	ed inoltre i vincoli di priorità.
+	GUARDA LA SOLUZIONE E I COMMENTI, QUA HO SCAZZATO TUTTO
 */
 
 package main
@@ -53,6 +42,7 @@ var nastro_PB_chan = make(chan bool)
 
 var robot_A_request_chan = make(chan bool)
 var robot_B_request_chan = make(chan bool)
+
 var robot_CA_chan = make(chan bool)
 var robot_CB_chan = make(chan bool)
 var robot_PA_chan = make(chan bool)
