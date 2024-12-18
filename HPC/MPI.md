@@ -1,6 +1,6 @@
 MPI (Message passing interface) è uno standard di fatto, che stabilisce un protocollo per la comunicazione tra processi in sistemi paralleli.
 
-Nasce per sistemi con architetture a memoria distribuita, e quindi che utilizzano un modello a scambio di messaggi. Tuttavia è una libreria flessibile, nel senso che funziona anche per modello a memoria comune.
+Nasce per sistemi con architetture a **memoria distribuit**a, e quindi che utilizzano un **modello a scambio di messaggi**. Tuttavia è una libreria flessibile, nel senso che funziona anche per modello a memoria comune.
 
 ...
 
