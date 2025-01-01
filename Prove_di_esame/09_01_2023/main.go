@@ -8,8 +8,7 @@ import (
 
 const MAX_POSTI_STANDARD = 5
 const MAX_POSTI_MAXI = 3
-const NUM_CAMPER = 5
-const NUM_AUTO = 8
+const NUM_TURISTI = 10
 
 const TIPI_TURISTI = 2
 const (
@@ -19,17 +18,38 @@ const (
 
 var NOMI_TURISTI = [TIPI_TURISTI]string{"AUTOMOBILE", "CAMPER"}
 
-type req_t struct {
-	id   int
-	tipo string
-	ack  chan bool
+const TIPI_POSTI = 3
+const (
+	NESSUNO  = 0
+	STANDARD = 1
+	MAXI     = 2
+)
+
+var NOMI_POSTI = [TIPI_POSTI]string{"NESSUNO", "STANDARD", "MAXI"}
+
+type dati_turista struct {
+	id                  int
+	tipo                string
+	ack                 chan int // l'ack mi dice anche che tipo di posto è disponibile alla piazzola
+	tipo_posto_occupato int      // questo mi serve quando ritorno giù per far capire al gestore che posto ho liberato
+}
+
+type stato_gestore struct {
+	num_posti_standard     int
+	num_posti_maxi         int
+	auto_in_salita         int
+	auto_in_discesa        int
+	camper_in_salita       int
+	camper_in_discesa      int
+	spazzaneve_in_transito bool
+	fine                   bool
 }
 
 // canali usati dai veicoli per richiedere accesso alla strada
-var salita_chans [TIPI_TURISTI]chan req_t
-var discesa_chans [TIPI_TURISTI]chan req_t
-var fine_salita_chans [TIPI_TURISTI]chan bool
-var fine_discesa_chans [TIPI_TURISTI]chan bool
+var salita_chans [TIPI_TURISTI]chan dati_turista
+var discesa_chans [TIPI_TURISTI]chan dati_turista
+var fine_salita_chans [TIPI_TURISTI]chan dati_turista
+var fine_discesa_chans [TIPI_TURISTI]chan dati_turista
 
 var salita_spazzaneve = make(chan bool, 100)
 var discesa_spazzaneve = make(chan bool, 100)
@@ -49,7 +69,7 @@ func when_bool(b bool, c chan bool) chan bool {
 	return c
 }
 
-func when_req_t(b bool, c chan req_t) chan req_t {
+func when_dati_turista(b bool, c chan dati_turista) chan dati_turista {
 	if !b {
 		return nil
 	}
@@ -79,6 +99,7 @@ func spazzaneve() {
 		time.Sleep(time.Duration(2 * time.Second)) // tempo di discesa
 		fine_discesa_spazzaneve <- true            // esco dalla strada
 		fmt.Printf("\t[SPAZZANEVE]: sono arrivato a valle!\n")
+
 		sleepRandTime(3) // sosta al bar
 
 		salita_spazzaneve <- true // valore arbitraio non importante
@@ -93,148 +114,227 @@ func spazzaneve() {
 
 func turista(id int) {
 	tipo := rand.Intn(TIPI_TURISTI)
-	req := req_t{id, NOMI_TURISTI[tipo], make(chan bool)}
+	req := dati_turista{id, NOMI_TURISTI[tipo], make(chan int), NESSUNO}
 
 	fmt.Printf("[TURISTA %d] vuole salire con %s!\n", req.id, req.tipo)
-	salita_chans[id] <- req
-	<-req.ack
-	fmt.Printf("[TURISTA %d] salgo!\n")
+	salita_chans[tipo] <- req
+	var tipo_posto int = <-req.ack
+	req.tipo_posto_occupato = tipo_posto
+	fmt.Printf("[TURISTA %d] salgo ad occupare %s!\n", id, NOMI_POSTI[tipo_posto])
 	time.Sleep(time.Duration(1 * time.Second)) // tempo di salita
-	fine_salita_chans[id] <- true              // esco dalla strada
+	fine_salita_chans[tipo] <- req             // esco dalla strada
 	fmt.Printf("\t[TURISTA %d]: sono arrivato al piazzale!\n", id)
 	sleepRandTime(3) // sosta al piazzale
 
-	discesa_chans[id] <- req
+	discesa_chans[tipo] <- req
 	<-req.ack
-	fmt.Printf("[TURISTA %d] scendo!\n")
+	fmt.Printf("[TURISTA %d] scendo!\n", id)
 	time.Sleep(time.Duration(1 * time.Second)) // tempo di discesa
-	fine_discesa_chans[id] <- true             // esco dalla strada
+	fine_discesa_chans[tipo] <- req            // esco dalla strada
 	fmt.Printf("\t[TURISTA %d]: sono sceso a valle; torno a casa!\n", id)
 
 	done <- true
 }
 
-func condizione_sincronizzazione_prelievo_piccolo(quantità_acqua float32, quantità_cassetta_10 int, una_cassetta_piena bool) bool {
-	var abbastanza_acqua bool = quantità_acqua >= 0.5
-
-	/*
-		Un prelievo piccolo può essere effettuato se:
-			- c'è abbastanza acqua
-			- la relativa cassetta non è piena
-			- non c'è un addetto al lavoro (non controllo dato che è garantito dal canale di fine_intervento)
-
-		Inoltre l'addetto ha priorià se:
-			- il serbatoio è vuoto	(non controllo a causa di condizione sopra)
-			- OPPURE, una cassetta qualsiasi è piena
-	*/
-	if quantità_acqua == 0 || una_cassetta_piena { // precedenza all'addetto
+func condizione_sinc_auto_salita(stato stato_gestore, num_veicoli_in_discesa int, num_camper_in_salita int) bool {
+	// condizioni di sincronizzazione
+	if stato.spazzaneve_in_transito {
 		return false
 	}
 
-	if abbastanza_acqua && quantità_cassetta_10 != CAPACITÀ_CASSETTA_10 {
-		return true
-	}
-
-	return false
-}
-
-func condizione_sincronizzazione_prelievo_grande(quantità_acqua float32, quantità_cassetta_20 int, una_cassetta_piena bool, num_prelievo_piccolo int) bool {
-	var abbastanza_acqua bool = quantità_acqua >= 1.5
-
-	/*
-		Un prelievo grande può essere effettuato se:
-			- c'è abbastanza acqua
-			- la relativa cassetta non è piena(non controllo a causa di condizione sotto)
-			- non c'è un addetto al lavoro
-			- non ci sono persone in coda che vogliono fare un prelievo piccolo
-
-		Inoltre, l'addetto ha priorià se:
-			- il serbatoio è vuoto	(non controllo a causa di condizione sopra)
-			- OPPURE, una cassetta qualsiasi è piena
-	*/
-
-	// precedenza all'addetto
-	if quantità_acqua == 0 || una_cassetta_piena {
+	if stato.camper_in_discesa != 0 {
 		return false
 	}
 
-	if abbastanza_acqua && quantità_cassetta_20 != CAPACITÀ_CASSETTA_20 && num_prelievo_piccolo == 0 {
-		return true
+	if stato.num_posti_standard == 0 && stato.num_posti_maxi == 0 {
+		return false
 	}
 
-	return false
+	// condizioni di priorità
+	if num_veicoli_in_discesa != 0 || num_camper_in_salita != 0 {
+		return false
+	}
+
+	return true
 }
 
-func condizione_sincronizzazione_addetto(quantità_acqua float32, una_cassetta_piena bool, prelievi_in_corso int) bool {
-	/*
-		L'addetto ha priorià se:
-			- il serbatoio è vuoto	(non controllo a causa di condizione sopra)
-			- OPPURE, una cassetta qualsiasi è piena
-
-		L'addetto aspetta se:
-			- ci sono cittadini che vogliono fare un prelievo
-	*/
-	if quantità_acqua == 0 || una_cassetta_piena {
-		return true
+func condizione_sinc_auto_discesa(stato stato_gestore, num_camper_in_salita int, spazzaneve_in_coda int) bool {
+	// condizioni di sincronizzazione
+	if stato.spazzaneve_in_transito {
+		return false
 	}
 
-	if prelievi_in_corso == 0 {
-		return true
+	if stato.camper_in_salita != 0 {
+		return false
 	}
 
-	return false
+	// condizioni di priorità
+	if num_camper_in_salita != 0 && spazzaneve_in_coda != 0 {
+		return false
+	}
+
+	return true
+}
+
+func condizione_sinc_camper_salita(stato stato_gestore) bool {
+	// condizioni di sincronizzazione
+	if stato.spazzaneve_in_transito {
+		return false
+	}
+
+	if stato.camper_in_discesa != 0 {
+		return false
+	}
+
+	if stato.num_posti_maxi == 0 {
+		return false
+	}
+
+	// condizioni di priorità
+	// camper ha priorità max in salita
+
+	return true
+}
+
+func condizione_sinc_camper_discesa(stato stato_gestore, spazzaneve_in_coda int) bool {
+	// condizioni di sincronizzazione
+	if stato.spazzaneve_in_transito {
+		return false
+	}
+
+	if stato.camper_in_salita != 0 {
+		return false
+	}
+
+	// condizioni di priorità
+	if spazzaneve_in_coda != 0 {
+		return false
+	}
+
+	return true
+}
+
+func condizione_sinc_spazzaneve_salita(stato stato_gestore, num_camper_in_salita int, num_auto_in_salita int) bool {
+	// condizioni di sincronizzazione
+	if stato.auto_in_discesa != 0 || stato.auto_in_salita != 0 || stato.camper_in_discesa != 0 || stato.camper_in_salita != 0 {
+		return false
+	}
+
+	// condizioni di priorità
+	if num_camper_in_salita != 0 || num_auto_in_salita != 0 {
+		return false
+	}
+
+	return true
+}
+
+func condizione_sinc_spazzaneve_discesa(stato stato_gestore) bool {
+	// condizioni di sincronizzazione
+	if stato.auto_in_discesa != 0 || stato.auto_in_salita != 0 || stato.camper_in_discesa != 0 || stato.camper_in_salita != 0 {
+		return false
+	}
+
+	// condizioni di priorità
+	// spazzaneve ha priorità max in discesa
+
+	return true
 }
 
 func strada() {
-	var id int
-	// stato erogatore
-	var quantità_acqua float32 = CAPACITÀ_SERBATOIO
-	var quantità_cassetta_10 int = 0
-	var quantità_cassetta_20 int = 0
-	var una_cassetta_piena bool = false
-
-	// var fine bool = false // diventa true quando sono stati completati i montaggi di TOT auto
+	// stato strada/piazzale
+	var stato stato_gestore
+	stato.num_posti_standard = MAX_POSTI_STANDARD
+	stato.num_posti_maxi = MAX_POSTI_MAXI
+	stato.auto_in_salita = 0
+	stato.auto_in_discesa = 0
+	stato.camper_in_salita = 0
+	stato.camper_in_discesa = 0
+	stato.spazzaneve_in_transito = false
+	stato.fine = false
 
 	for {
 		select {
-		// canali dei cittadini
-		case id = <-when(condizione_sincronizzazione_prelievo_piccolo(quantità_acqua, quantità_cassetta_10, una_cassetta_piena), prelievo_piccolo):
-			quantità_acqua -= 0.5
-			quantità_cassetta_10++
-			// erogazione
-			time.Sleep(time.Duration(1) * time.Second)
-			// risposta
-			eroga_piccolo <- 1
-			fmt.Printf("[erogatore]: servito un prelievo piccolo del cittadino %d;\n\tstato: (%f, %d, %d)", id, quantità_acqua, quantità_cassetta_10, quantità_cassetta_20)
+		// canali dei turisti | caso salita
+		case req := <-when_dati_turista(condizione_sinc_auto_salita(stato, len(discesa_chans[AUTOMOBILE])+len(discesa_chans[CAMPER]),
+			len(salita_chans[CAMPER])), salita_chans[AUTOMOBILE]):
 
-		case id = <-when(condizione_sincronizzazione_prelievo_grande(quantità_acqua, quantità_cassetta_20, una_cassetta_piena, len(prelievo_piccolo)), prelievo_grande):
-			quantità_acqua -= 1.5
-			quantità_cassetta_20++
-			// erogazione
-			time.Sleep(time.Duration(2) * time.Second)
-			// risposta
-			eroga_grande <- 1
-			fmt.Printf("[erogatore]: servito un prelievo grande del cittadino %d;\n\tstato: (%f, %d, %d)", id, quantità_acqua, quantità_cassetta_10, quantità_cassetta_20)
+			stato.auto_in_salita++
+			if stato.num_posti_standard == 0 && stato.num_posti_maxi > 0 {
+				stato.num_posti_maxi--
+				req.ack <- MAXI
+			} else {
+				stato.num_posti_standard--
+				req.ack <- STANDARD
+			}
+			fmt.Printf("[STRADA] il turista: %d, sta salendo la strada in: %s\n", req.id, req.tipo)
 
-		// canale dell'addetto
-		case <-when(condizione_sincronizzazione_addetto(quantità_acqua, una_cassetta_piena, len(prelievo_piccolo)+len(prelievo_grande)), req_intervento):
-			ok_intervento <- 1
+		case req := <-when_dati_turista(condizione_sinc_camper_salita(stato), salita_chans[CAMPER]):
+			stato.camper_in_salita++
+			stato.num_posti_maxi--
+			req.ack <- MAXI
+			fmt.Printf("[STRADA] il turista: %d, sta salendo la strada in: %s\n", req.id, req.tipo)
 
-			quantità_acqua = CAPACITÀ_SERBATOIO
-			quantità_cassetta_10 = 0
-			quantità_cassetta_20 = 0
-			// aspetto il termine dell'intervento
-			<-fine_intervento
-			fmt.Printf("[erogatore]: l'addetto ha finito il suo intervento;\n\tstato: (%f, %d, %d)", quantità_acqua, quantità_cassetta_10, quantità_cassetta_20)
+		case req := <-fine_salita_chans[AUTOMOBILE]:
+			stato.auto_in_salita--
+			fmt.Printf("[STRADA] il turista: %d, è arrivato al piazzale in: %s\n", req.id, req.tipo)
 
-			//terminazione
-			// case <-terminaDeposito:
-			// 	fmt.Printf("[erogatore]: termino\n")
-			// 	done <- true
-			// 	return
+		case req := <-fine_salita_chans[CAMPER]:
+			stato.camper_in_salita--
+			fmt.Printf("[STRADA] il turista: %d, è arrivato al piazzale in: %s\n", req.id, req.tipo)
+
+		// canali dei turisti | caso discesa
+		case req := <-when_dati_turista(condizione_sinc_auto_discesa(stato, len(salita_chans[CAMPER]), len(discesa_spazzaneve)), discesa_chans[AUTOMOBILE]):
+			stato.auto_in_discesa++
+			if req.tipo_posto_occupato == MAXI {
+				stato.num_posti_maxi++
+			} else {
+				stato.num_posti_standard++
+			}
+			req.ack <- 100 // valore arbitrario
+			fmt.Printf("[STRADA] il turista: %d, sta scendendo la strada in: %s\n", req.id, req.tipo)
+
+		case req := <-when_dati_turista(condizione_sinc_camper_discesa(stato, len(discesa_spazzaneve)), discesa_chans[CAMPER]):
+			stato.camper_in_discesa++
+			stato.num_posti_maxi++
+			req.ack <- 100 // valore arbitrario
+			fmt.Printf("[STRADA] il turista: %d, sta scendendo la strada in: %s\n", req.id, req.tipo)
+
+		case req := <-fine_discesa_chans[AUTOMOBILE]:
+			stato.auto_in_discesa--
+			fmt.Printf("[STRADA] il turista: %d, è tornato a valle in: %s\n", req.id, req.tipo)
+
+		case req := <-fine_discesa_chans[CAMPER]:
+			stato.camper_in_discesa--
+			fmt.Printf("[STRADA] il turista: %d, è tornato a valle in: %s\n", req.id, req.tipo)
+
+		// canali dello spazzaneve
+		case <-when_bool(condizione_sinc_spazzaneve_discesa(stato), discesa_spazzaneve):
+			stato.spazzaneve_in_transito = true
+			if stato.fine {
+				ack_spazzaneve <- false
+			} else {
+				ack_spazzaneve <- true
+			}
+
+		case <-fine_discesa_spazzaneve:
+			stato.spazzaneve_in_transito = false
+
+		case <-when_bool(condizione_sinc_spazzaneve_salita(stato, len(salita_chans[CAMPER]), len(salita_chans[AUTOMOBILE])), salita_spazzaneve):
+			stato.spazzaneve_in_transito = true
+			ack_spazzaneve <- true
+
+		case <-fine_salita_spazzaneve:
+			stato.spazzaneve_in_transito = false
+
+		// terminazione
+		case <-termina_spazzaneve:
+			stato.fine = true
+
+		case <-termina:
+			fmt.Println("FINE !!!!!!")
+			done <- true
+			return
 		}
-
-		una_cassetta_piena = (quantità_cassetta_10 == CAPACITÀ_CASSETTA_10) || (quantità_cassetta_20 == CAPACITÀ_CASSETTA_20)
 	}
 }
 
@@ -244,42 +344,32 @@ func main() {
 	//inizializzazione canali
 	for i := 0; i < TIPI_TURISTI; i++ {
 		// asincroni perchè ho bisogno di usare len() per le politiche di priorità
-		salita_chans[i] = make(chan req_t, 100)
-		discesa_chans[i] = make(chan req_t, 100)
-		fine_salita_chans[i] = make(chan bool)
-		fine_discesa_chans[i] = make(chan bool)
+		salita_chans[i] = make(chan dati_turista, 100)
+		discesa_chans[i] = make(chan dati_turista, 100)
+		fine_salita_chans[i] = make(chan dati_turista)
+		fine_discesa_chans[i] = make(chan dati_turista)
 	}
 
-	go erogatore()
+	go strada()
 
-	for i := 0; i < CITTADINI_CON_RICHIESTE_GRANDI; i++ {
-		var req cittadino_req_t
-		req.id_cittadino = i
-		req.tipo = tipi_richiesta[1]
-
-		go cittadino(req)
+	for i := 0; i < NUM_TURISTI; i++ {
+		go turista(i)
 	}
 
-	for i := 0; i < CITTADINI_CON_RICHIESTE_PICCOLE; i++ {
-		var req cittadino_req_t
-		req.id_cittadino = i + CITTADINI_CON_RICHIESTE_GRANDI
-		req.tipo = tipi_richiesta[0]
+	go spazzaneve()
 
-		go cittadino(req)
+	// attendo la fine dei turisti
+	for i := 0; i < NUM_TURISTI; i++ {
+		<-done
 	}
 
-	go addetto()
+	// termino lo spazzaneve ed attendo la sua fine
+	termina_spazzaneve <- true
+	<-done
 
-	// //attendo la fine dei turisti
-	// for i := 0; i < MAXPROC; i++ {
-	// 	<-done
-	// }
+	// termino la strada ed il programma
+	termina <- true
+	<-done
 
-	// terminaAddetto <- true
-	// <-done
-
-	// termina_erogatore <- true
-	// <-done
-
-	// fmt.Printf("[main] APPLICAZIONE TERMINATA \n")
+	fmt.Printf("[main] APPLICAZIONE TERMINATA \n")
 }
