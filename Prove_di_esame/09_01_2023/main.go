@@ -182,7 +182,7 @@ func condizione_sinc_camper_salita(stato stato_gestore) bool {
 		return false
 	}
 
-	if stato.camper_in_discesa != 0 {
+	if stato.camper_in_discesa != 0 || stato.auto_in_discesa != 0 {
 		return false
 	}
 
@@ -202,7 +202,7 @@ func condizione_sinc_camper_discesa(stato stato_gestore, spazzaneve_in_coda int)
 		return false
 	}
 
-	if stato.camper_in_salita != 0 {
+	if stato.camper_in_salita != 0 || stato.auto_in_salita != 0 {
 		return false
 	}
 
