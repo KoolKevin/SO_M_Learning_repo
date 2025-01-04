@@ -146,6 +146,7 @@ func visitatore(id int, tipo int) {
 
 /*
 CONDIZIONI DI SINCRONIZZAZIONE
+(attenzione a condizioni con stato.fine)
 */
 func cond_sinc_entrata_singolo(stato stato_gestore) bool {
 	// condizioni di sincronizzazione
