@@ -86,6 +86,9 @@ func sleepRandTime(timeLimit int) {
 	}
 }
 
+func stampa_stato(stato stato_gestore) {
+}
+
 /*
 GOROUTINE DEGLI UTENTI
 */
@@ -211,6 +214,9 @@ func mostra() {
 			done <- true
 			return
 		}
+
+		// debug
+		// stampa_stato(stato)
 	}
 }
 
