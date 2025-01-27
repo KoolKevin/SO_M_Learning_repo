@@ -1,5 +1,3 @@
-
----
 ### Codice da scrivere:
 
 1. Fork COW

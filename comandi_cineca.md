@@ -14,5 +14,3 @@
 
 	module load autoload intelmpi
  	mpiicc -std=c99 sommavet.c –o sommavet
-
-

@@ -14,5 +14,3 @@ ARGOMENTI SU SISTEMI OPERATIVI
 ARGOMENTI SU HPC
     - come sono fatti questi sistemi
     - sperimentare programmazione parallela su sistemi HPC
-
-
