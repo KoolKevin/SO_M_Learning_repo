@@ -16,8 +16,9 @@ int main(int argc, char* argv[]) {
         printf("il numero di processi: %d è maggiore della dimensione dei dati: %d.\n", process_size, DIM);
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
-    // ipotesi semplificativa: accetto solo un numero di nodi tale da dividere
-    // per righe intere la matriche DIM*DIM ->  process_size deve essere un divisore di DIM
+    // Ipotesi semplificativa: La dimensione DIM delle righe e colonne della matrice
+    // è multipla del numero di nodi.
+    // ->  process_size deve essere un divisore di DIM
     if(DIM % process_size != 0) {
         printf("il numero di processi: %d non è un divisore della dimensione dei dati: %d.\n", process_size, DIM);
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
