@@ -5,7 +5,7 @@
 
 #include "omp.h"
 
-#define DEBUG 1
+// #define DEBUG 1
 
 void stampa_matrice(const double* mat, int dim) {
     for(int i=0; i<dim; i++) {
@@ -73,27 +73,6 @@ double pseudo_convoluzione(const double* mat_input, double* mat_output, int dim_
     return end-start;
 }
 
-/*
-    Si potrebbe ulteriormente ottimizzare
-*/
-double pseudo_convoluzione_parallela(const double* mat_input, double* mat_output, int dim_input, int dim_output) {
-    double start = omp_get_wtime();
-
-    #pragma omp parallel for schedule (static, 1)
-    // scorro gli elementi PARI della matrice di input
-    // es: (0; 0), (0; 2), ..., (2; 0), (2; 2), ...
-    for(int i=0; i<dim_input; i+=2) {
-        for(int j=0; j<dim_input; j+=2) {
-            // calcolo la media dell'intorno del punto corrente
-            double media_intorno = calcola_media_intorno(mat_input, dim_input, i, j);   // variabile locale al singolo thread (definita internamente)
-            mat_output[(i/2)*dim_output + (j/2)] = media_intorno;
-        }     
-    }   //sincronizzazione implicita alla fine del blocco parallelo (modello cobegin-coend)
-
-    double end = omp_get_wtime();
-
-    return end-start;
-}
 
 int main(int argc, char** argv) {
     if(argc < 3) {

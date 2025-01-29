@@ -56,6 +56,11 @@ double calcola_media_intorno(const double* mat_input, int dim_input, int riga, i
 double pseudo_convoluzione_parallela(const double* mat_input, double* mat_output, int dim_input, int dim_output) {
     double start = omp_get_wtime();
 
+    /*
+        Qua basta suddividere la matrice in blocchi di righe da assegnare ai vari omp_get_thread_limit
+
+        Lo scheduling static è adeguato in quanto il carico di lavoro di ogni iterazione è sempre uguale
+    */
     #pragma omp parallel for schedule (static, 1)
     for(int i=0; i<dim_input; i+=2) {
         for(int j=0; j<dim_input; j+=2) {
