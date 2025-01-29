@@ -47,41 +47,18 @@ double calcola_media_intorno(const double* mat_input, int dim_input, int riga, i
     return somma/9;
 }
 
+
 /*
-    Complessità temporale = O( (N/2)^2 * 9 ); con N/2 arrotondato per eccesso
-    - data una matrice N*N
-    - considero gli elementi di metà delle righe e metà delle colonne
-    - per ognuno degli elementi sopra faccio 9 somme e una divisione 
-
-    Complessita spaziale = O(N^2) dato che considero tutti gli elementi
+    NB: problema embarassingly parallel!
+    - Le medie degli intorni sono calcolabili in maniera indipendente l'una dall'altra
+    - Non c'è bisogno di interazione tra i processi concorrenti  
 */
-double pseudo_convoluzione(const double* mat_input, double* mat_output, int dim_input, int dim_output) {
-    double start = omp_get_wtime();
-
-    // scorro gli elementi PARI della matrice di input
-    // es: (0; 0), (0; 2), ..., (2; 0), (2; 2), ...
-    for(int i=0; i<dim_input; i+=2) {
-        for(int j=0; j<dim_input; j+=2) {
-            // calcolo la media dell'intorno del punto corrente
-            double media_intorno = calcola_media_intorno(mat_input, dim_input, i, j);
-            mat_output[(i/2)*dim_output + (j/2)] = media_intorno;
-        }     
-    }
-
-    double end = omp_get_wtime();
-
-    return end-start;
-}
-
 double pseudo_convoluzione_parallela(const double* mat_input, double* mat_output, int dim_input, int dim_output) {
     double start = omp_get_wtime();
 
     #pragma omp parallel for schedule (static, 1)
-    // scorro gli elementi PARI della matrice di input
-    // es: (0; 0), (0; 2), ..., (2; 0), (2; 2), ...
     for(int i=0; i<dim_input; i+=2) {
         for(int j=0; j<dim_input; j+=2) {
-            // calcolo la media dell'intorno del punto corrente
             double media_intorno = calcola_media_intorno(mat_input, dim_input, i, j);   // variabile locale al singolo thread (definita internamente)
             mat_output[(i/2)*dim_output + (j/2)] = media_intorno;
         }     
@@ -129,20 +106,13 @@ int main(int argc, char** argv) {
     stampa_matrice(mat_input, dim_matrix);
     #endif
 
-    double elapsed_sequential = pseudo_convoluzione(mat_input, mat_risultato, dim_matrix, dim_risultato);
-    #ifdef DEBUG
-    printf("--- MATRICE RISULTATO SEQUENZIALE ---\n");
-    stampa_matrice(mat_risultato, dim_risultato);
-    #endif
-
     double elapsed_parallel = pseudo_convoluzione_parallela(mat_input, mat_risultato, dim_matrix, dim_risultato);
     #ifdef DEBUG
     printf("--- MATRICE RISULTATO PARALLELO ---\n");
     stampa_matrice(mat_risultato, dim_risultato);
     #endif
 
-    printf("Elapsed sequential:\t %f ms\n", elapsed_sequential*1000);
-    printf("Elapsed parallel:\t %f ms;\tSpeedup: %0.2f\n", elapsed_parallel*1000, elapsed_sequential/elapsed_parallel);
+    printf("Elapsed parallel:\t %f ms;\n", elapsed_parallel*1000);
 
     free(mat_input);
     free(mat_risultato);
