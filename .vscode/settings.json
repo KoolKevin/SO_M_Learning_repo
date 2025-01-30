@@ -5,6 +5,7 @@
         "types.h": "c",
         "user.h": "c",
         "fcntl.h": "c",
-        "limits": "c"
+        "limits": "c",
+        "omp.h": "c"
     }
 }
