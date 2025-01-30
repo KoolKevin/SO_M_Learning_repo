@@ -5,7 +5,7 @@
 
 #include "omp.h"
 
-#define DEBUG 1
+// #define DEBUG 1
 
 void stampa_matrice(const double* mat, int dim) {
     for(int i=0; i<dim; i++) {
