@@ -49,7 +49,7 @@ double calcola_media_intorno(const double* mat_input, int dim_input, int riga, i
     - considero gli elementi di metà delle righe e metà delle colonne
     - per ognuno degli elementi sopra faccio 9 somme e una divisione 
 
-    Complessita spaziale = O(N^2) dato che considero tutti gli elementi
+    Complessita spaziale = O(N^2); considero tutti gli elementi
 */
 double pseudo_convoluzione(const double* mat_input, double* mat_output, int dim_input, int dim_output) {
     double start = omp_get_wtime();

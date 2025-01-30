@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <mpi.h>
 #include <time.h>
-
-#include "omp.h"
 
 // #define DEBUG 1
 
@@ -19,113 +17,143 @@ void stampa_matrice(const double* mat, int dim) {
     printf("\n");
 }
 
-double calcola_media_intorno(const double* mat_input, int dim_input, int riga, int colonna) {
-    double somma = 0.0;
-
-    /*
-        considero l'intorno 3x3 dell'elemento corrente
-
-        NB: non ho corse critiche dato che gli unici elementi della matrice che vengono
-        acceduti da più thread contemporaneamente sono quelli appartenenti agli intorni; 
-        quest'ultimi vengono acceduti in sola lettura! 
-    */
-    for(int i=-1; i<=1; i++) {
-        for(int j=-1; j<=1; j++) {
-            int riga_intorno = riga + i;
-            int colonna_intorno = colonna + j;
-
-            // controllo se sto considerando l'intorno di un elemento su un bordo della matrice
-            if( (riga_intorno<0 || riga_intorno>=dim_input) || (colonna_intorno<0 || colonna_intorno>=dim_input) ) {
-                somma += 0.0;
-            }
-            else {
-                somma += mat_input[riga_intorno*dim_input + colonna_intorno];
-            }
-        }
-    }
-
-    return somma/9;
-}
-
-/*
-    Complessità temporale = O( (N/2)^2 * 9 ); con N/2 arrotondato per eccesso
-    - data una matrice N*N
-    - considero gli elementi di metà delle righe e metà delle colonne
-    - per ognuno degli elementi sopra faccio 9 somme e una divisione 
-
-    Complessita spaziale = O(N^2) dato che considero tutti gli elementi
-*/
-double pseudo_convoluzione(const double* mat_input, double* mat_output, int dim_input, int dim_output) {
-    double start = omp_get_wtime();
-
-    // scorro gli elementi PARI della matrice di input
-    // es: (0; 0), (0; 2), ..., (2; 0), (2; 2), ...
-    for(int i=0; i<dim_input; i+=2) {
-        for(int j=0; j<dim_input; j+=2) {
-            // calcolo la media dell'intorno del punto corrente
-            double media_intorno = calcola_media_intorno(mat_input, dim_input, i, j);
-            mat_output[(i/2)*dim_output + (j/2)] = media_intorno;
-        }     
-    }
-
-    double end = omp_get_wtime();
-
-    return end-start;
-}
-
-
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
     if(argc < 3) {
-        printf("usage: ./conv <dim_matrix> <num_thread>\n");
+        printf("usage: ./conv <dim_matrix>\n");
         exit(1);
     }
 
     int dim_matrix = atoi(argv[1]);
-    int num_threads = atoi(argv[2]);
-    
-    printf("Numero di core (logici) disponibili: %d\n", omp_get_max_threads());
-    omp_set_num_threads(num_threads);
+    int dim_result = (dim_matrix+1)/2;
 
-    int size_input = dim_matrix*dim_matrix*sizeof(double);
-    // approssimo per eccesso (es: input 5x5 -> risultato 3x3)
-    int dim_risultato = (dim_matrix+1) / 2;
-    int size_risultato = dim_risultato*dim_risultato*sizeof(double);
+    MPI_Init(&argc, &argv);
     
-    double* mat_input = malloc(size_input);
-    double* mat_risultato = malloc(size_risultato);
-    for (int i = 0; i < size_risultato/sizeof(double); i++) {
-        mat_risultato[i] = 0.0;
+    int num_proc, my_rank;
+    MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+    #ifdef DEBUG
+    if (my_rank == 0) {
+        printf("Dim matrice in input: %dx%d\n", dim_matrix, dim_matrix);
+        printf("Dim matrice in output: %dx%d\n", dim_result, dim_result);
+        printf("Num di processi paralleli: %d\n", num_proc);
+    }
+    #endif
+
+    /*
+        IPOTESI SEMPLIFICATIVA:
+        La dimensione della matrice in output è multipla del numero di nodi; in questa
+        maniera posso trasferire direttamente dei "blocchi" di righe ai vari nodi.
+
+        Se non facessi questa ipotesi, per distribuire i dati ad ogni nodo, dovrei:
+        - costruirmi  una matrice di appoggio in cui memorizzo i vari blocchi 3x3 linearmente in memoria. 
+        - invocare una scatter su questa matrice di appoggio e non su quella di input (memorizzata in
+          maniera row-major e con quindi i dati dei blocchi 3x3 sparsi in memoria con un offset pari alla
+          dimensione della riga)
+
+        In conclusione:
+            - num_proc deve essere un divisore di dim_result
+            - ogni processo calcola blocchi di righe della matrice risultato
+    */
+    if(dim_result % num_proc != 0) {
+        printf("il numero di processi (%d) non è un divisore della dimensione della matrice da calcolare: %d.\n", num_proc, dim_result);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
+    
+    if(num_proc > dim_result) {
+        printf("il numero di processi (%d) è maggiore della dimensione della matrice da calcolare (%d).\n", num_proc, dim_result);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
-    srand(time(NULL));
-    for(int i=0; i<dim_matrix; i++) {
-        for(int j=0; j<dim_matrix; j++) {
-            // rand() varia tra [0, RAND_MAX]
-            // qua sotto sto quindi generando numeri casuali tra 0 e 1
-            mat_input[i*dim_matrix + j] = (double)rand() / RAND_MAX;
-        }        
+
+    // la matrice B deve essere visibile a tutti
+    int mat_B[DIM][DIM];
+    // sottoporzioni delle matrici assegnate ai vari nodi
+    int  my_A[DIM*(DIM/num_proc)], my_C[DIM*(DIM/num_proc)];
+    
+    if (my_rank == 0) {
+        int mat_A[DIM][DIM];
+        
+        //inizializzazione e distribuzione della matrice operando A
+        srand((unsigned int)time(NULL)); 
+        for(int i=0; i<DIM; i++) {
+            for(int j=0; j<DIM; j++) {
+                mat_A[i][j] = rand()%10 + 1;
+                mat_B[i][j] = rand()%10 + 1;
+            }
+        }
+
+        printf("\nOperando A:\n");
+        for(int i=0; i<DIM; i++) {
+            printf("\t[ ");
+
+            for(int j=0; j<DIM; j++) {
+                printf("%d\t", mat_A[i][j]);
+            }
+
+            printf(" ]\n");
+        }
+
+        printf("\nOperando B:\n");
+        for(int i=0; i<DIM; i++) {
+            printf("\t[ ");
+
+            for(int j=0; j<DIM; j++) {
+                printf("%d\t", mat_B[i][j]);
+            }
+
+            printf(" ]\n");
+        }
+
+        // DIM/num_proc = numero di righe assegnate ad ogni processo
+        // Ogni riga ha poi DIM elementi
+        MPI_Scatter(mat_A, DIM*(DIM/num_proc), MPI_INT, &my_A, DIM*(DIM/num_proc), MPI_INT, 0, MPI_COMM_WORLD); // mittente
+    }
+    else {
+        MPI_Scatter(NULL, DIM*(DIM/num_proc), MPI_INT, &my_A, DIM*(DIM/num_proc), MPI_INT, 0, MPI_COMM_WORLD);  // destinatari
     }
 
-    #ifdef DEBUG
-    printf("--- MATRICE INPUT ---\n");
-    stampa_matrice(mat_input, dim_matrix);
-    #endif
+    // printf("\tsono :%d my_rank; ho ricevuto la riga che inizia per %d\n", my_rank, my_A[0]);
 
-    double elapsed_sequential = pseudo_convoluzione(mat_input, mat_risultato, dim_matrix, dim_risultato);
-    #ifdef DEBUG
-    printf("--- MATRICE RISULTATO SEQUENZIALE ---\n");
-    stampa_matrice(mat_risultato, dim_risultato);
-    #endif
+    // tutti eseguono il brodcast della matrice operando B
+    MPI_Bcast(mat_B, DIM*DIM, MPI_INT, 0, MPI_COMM_WORLD);
+    
+    // ogni nodo calcola la sua porzione
+    for(int i=0; i < DIM/num_proc; i++) {       // questo scorre le righe della sotto-matrice my_A
+        for(int k=0; k < DIM; k++) {                // questo scorre tutte le colonne della matriche B
+            my_C[i*DIM + k] = 0; 
 
-    double elapsed_parallel = pseudo_convoluzione_parallela(mat_input, mat_risultato, dim_matrix, dim_risultato);
-    #ifdef DEBUG
-    printf("--- MATRICE RISULTATO PARALLELO ---\n");
-    stampa_matrice(mat_risultato, dim_risultato);
-    #endif
+            for(int j=0; j < DIM; j++) {            // questo scorre gli elementi all'interno di una riga/colonna
+                my_C[i*DIM + k] += my_A[i*DIM + j] * mat_B[j][k];   
+                // printf("\t\tsono: %d; sto calcolando A[%d][%d] * B[%d][%d] = %d * %d => C[%d][%d]\n", my_rank, i, j, j, k,  my_A[i*DIM + j], mat_B[j][k], i, k);
+            }
+        }
+    }
 
-    printf("Elapsed sequential:\t %f ms\n", elapsed_sequential*1000);
-    printf("Elapsed parallel:\t %f ms;\tSpeedup: %0.2f\n", elapsed_parallel*1000, elapsed_sequential/elapsed_parallel);
+    printf("\tsono :%d my_rank; ho calcolato delle righe che iniziano per %d\n", my_rank, my_C[0]);
+        
+    //collettore 
+    if (my_rank==0) {   
+        int mat_C[DIM][DIM];
+        MPI_Gather(&my_C, DIM*(DIM/num_proc), MPI_INT, mat_C, DIM*(DIM/num_proc), MPI_INT, 0, MPI_COMM_WORLD);  // ricevo
 
-    free(mat_input);
-    free(mat_risultato);
+        printf("\nRisultato C=A*B:\n");
+        for(int i=0; i<DIM; i++) {
+            printf("\t[ ");
+
+            for(int j=0; j<DIM; j++) {
+                printf("%d\t", mat_C[i][j]);
+            }
+
+            printf(" ]\n");
+        }
+    }
+    else {
+        MPI_Gather(&my_C, DIM*(DIM/num_proc), MPI_INT, NULL, 0, MPI_INT, 0, MPI_COMM_WORLD);    // invio
+    }
+    
+    MPI_Finalize();
+    
+    return EXIT_SUCCESS;
 }
+
