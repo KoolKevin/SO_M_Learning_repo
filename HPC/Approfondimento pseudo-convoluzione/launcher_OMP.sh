@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --account=tra24_IngInfBo
+#SBATCH --account=tra24_IngInfB2
 #SBATCH --partition=g100_usr_prod
 
 #SBATCH --job-name=kkoltraka
@@ -12,10 +12,7 @@
 #SBATCH -o job.out
 #SBATCH -e job.err
 
-srun ./sommavet 48
-
-
-# for I in 12 24 48; do
-# echo "Launching calculateR $I"
-# srun calculateR $I
-# done
+for num_thread in 1 3 6 12 24 48; do
+ 	echo "Launching ./versione_omp 10000 $num_thread"
+	srun  ./versione_omp 10000 $num_thread
+done

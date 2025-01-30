@@ -121,4 +121,6 @@ int main(int argc, char** argv) {
 
     free(mat_input);
     free(mat_risultato);
+
+    printf("----------------------- FINE -----------------------\n\n\n");
 }
