@@ -36,6 +36,10 @@ void stampa_matrice(const double* mat, int dim) {
 }
 
 double calcola_media_intorno_ris_parziale(const double* righe, int dim_riga, int num_elem, int riga, int colonna) {
+    #ifdef DEBUG
+        int my_rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    #endif
     double somma = 0.0;
 
     /*
@@ -48,9 +52,15 @@ double calcola_media_intorno_ris_parziale(const double* righe, int dim_riga, int
 
             // controllo se sto considerando l'intorno di un elemento su un bordo della matrice
             if( (riga_intorno<0 || riga_intorno*dim_riga>=num_elem) || (colonna_intorno<0 || colonna_intorno>=dim_riga) ) {
+                #ifdef DEBUG
+                printf("\tProcesso %d; blocco[%d][%d] => +0\n", my_rank, i, j);
+                #endif
                 somma += 0.0;
             }
             else {
+                #ifdef DEBUG
+                printf("\tProcesso %d; blocco[%d][%d] => + %f\n", my_rank, i, j, righe[riga_intorno*dim_riga + colonna_intorno]);
+                #endif
                 somma += righe[riga_intorno*dim_riga + colonna_intorno];
             }
         }
@@ -198,9 +208,25 @@ int main(int argc, char* argv[]) {
         //     MPI_Comm comm          // Comunicatore MPI
         // );
         MPI_Scatterv(mat_input, send_counts, input_offsets, MPI_DOUBLE, my_righe, send_counts[my_rank], MPI_DOUBLE, 0, MPI_COMM_WORLD); // mittente
+
+        #ifdef DEBUG
+        printf("Processo %d: \n", my_rank);
+        for(int i=0; i<send_counts[my_rank]; i++) {
+            printf("\tricevo %f\n", my_righe[i]);
+        }
+        printf("\n");
+        #endif
     }
     else {
         MPI_Scatterv(NULL, send_counts, input_offsets, MPI_DOUBLE, my_righe, send_counts[my_rank], MPI_DOUBLE, 0, MPI_COMM_WORLD); // destinatari
+
+        #ifdef DEBUG
+        printf("Processo %d: \n", my_rank);
+        for(int i=0; i<send_counts[my_rank]; i++) {
+            printf("\tricevo %f\n", my_righe[i]);
+        }
+        printf("\n");
+        #endif
     }
 
 
@@ -228,7 +254,7 @@ int main(int argc, char* argv[]) {
             my_righe_ris[riga_ris_parziale*dim_result + colonna_ris_parziale] = media_intorno;
 
             #ifdef DEBUG
-            printf("\tProcesso %d, ha calcolato my_righe[%d][%d] = %0.2f\n", my_rank, riga_ris_parziale, colonna_ris_parziale, media_intorno);
+            printf("\tProcesso %d, ha calcolato mat_input[%d][%d] = %0.2f\n", my_rank, riga_globale, colonna_globale, media_intorno);
             #endif
 
             colonna_ris_parziale++;
@@ -243,26 +269,22 @@ int main(int argc, char* argv[]) {
 
 
 
-  
-
         
     //collettore 
     if (my_rank==0) {   
         int size_mat_result = dim_result*dim_result*sizeof(double);
         double* mat_result = malloc(size_mat_result);
 
-        // int MPI_Gatherv(
-        //     const void *sendbuf,   // Buffer locale di invio (ogni processo invia i propri dati)
-        //     int sendcount,         // Numero di elementi inviati dal processo corrente
-        //     MPI_Datatype sendtype, // Tipo di dati degli elementi inviati
-        //     void *recvbuf,         // Buffer di ricezione (solo il root lo usa)
-        //     const int *recvcounts, // Array: numero di elementi ricevuti da ciascun processo
-        //     const int *displs,     // Array: offset nel buffer di ricezione per ogni processo
-        //     MPI_Datatype recvtype, // Tipo di dati degli elementi ricevuti
-        //     int root,              // Rank del processo root
-        //     MPI_Comm comm          // Comunicatore MPI
-        // );
-        MPI_Gatherv(my_righe_ris, send_counts[my_rank], MPI_DOUBLE, mat_result, send_counts, input_offsets, MPI_DOUBLE, 0, MPI_COMM_WORLD);  // ricevo
+        MPI_Gather(my_righe_ris, num_righe_ris_per_processo*dim_result, MPI_DOUBLE,
+                   mat_result, num_righe_ris_per_processo*dim_result, MPI_DOUBLE, 0, MPI_COMM_WORLD);  // ricevo
+
+        #ifdef DEBUG
+        printf("Processo %d: \n", my_rank);
+        for(int i=0; i<dim_result*num_righe_ris_per_processo; i++) {
+            printf("\tinvia %f\n", my_righe_ris[i]);
+        }
+        printf("\n");
+        #endif
 
         #ifdef DEBUG
         printf("\n--- MATRICE RISULTATO ---\n");
@@ -274,7 +296,16 @@ int main(int argc, char* argv[]) {
         free(mat_input);
     }
     else {
-        MPI_Gatherv(my_righe_ris, send_counts[my_rank], MPI_DOUBLE, NULL, send_counts, input_offsets, MPI_DOUBLE, 0, MPI_COMM_WORLD);    // invio
+        MPI_Gather(my_righe_ris, num_righe_ris_per_processo*dim_result, MPI_DOUBLE,
+                   NULL, num_righe_ris_per_processo*dim_result, MPI_DOUBLE, 0, MPI_COMM_WORLD);  // ricevo
+
+        #ifdef DEBUG
+        printf("Processo %d: \n", my_rank);
+        for(int i=0; i<dim_result*num_righe_ris_per_processo; i++) {
+            printf("\tinvia %f\n", my_righe_ris[i]);
+        }
+        printf("\n");
+        #endif
     }
     
     free(my_righe);
