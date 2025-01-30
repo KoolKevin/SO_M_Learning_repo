@@ -61,7 +61,7 @@ double calcola_media_intorno_ris_parziale(const double* righe, int dim_riga, int
 
 int main(int argc, char* argv[]) {
     if(argc < 2) {
-        printf("usage: ./conv <dim_matrix>\n");
+        printf("usage: ./versione_mpi <dim_matrix>\n");
         exit(1);
     }
 
@@ -76,6 +76,7 @@ int main(int argc, char* argv[]) {
 
     #ifdef DEBUG
     if (my_rank == 0) {
+        printf("\n");
         printf("Dim matrice in input: %dx%d\n", dim_matrix, dim_matrix);
         printf("Dim matrice in output: %dx%d\n", dim_result, dim_result);
         printf("Num di processi paralleli: %d\n", num_proc);
@@ -117,6 +118,7 @@ int main(int argc, char* argv[]) {
     #ifdef DEBUG
     printf("ogni processo elabora %d righe della matrice risultato\n", num_righe_ris_per_processo);
     printf("corrispondenti a %d elementi della matrice di input \n", num_righe_ris_per_processo*3*dim_matrix);
+    MPI_Barrier(MPI_COMM_WORLD);
     #endif
 
     /*
@@ -158,11 +160,13 @@ int main(int argc, char* argv[]) {
     double* mat_input;
     if (my_rank == 0) {
         #ifdef DEBUG
+        printf("\n");
         for(int i=0; i<num_proc; i++) {
             printf("proc: %d\n", i);
             printf("\tsend_counts: %d\n", send_counts[i]);
             printf("\tinput_offsets: %d\n", input_offsets[i]);
         }
+        printf("\n");
         #endif
 
         int size_input = dim_matrix*dim_matrix*sizeof(double);
@@ -234,7 +238,8 @@ int main(int argc, char* argv[]) {
             }
         }
     }     
-    
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
 
 
@@ -257,25 +262,28 @@ int main(int argc, char* argv[]) {
         //     int root,              // Rank del processo root
         //     MPI_Comm comm          // Comunicatore MPI
         // );
-        MPI_Gatherv(&my_righe_ris, send_counts[my_rank], MPI_DOUBLE, mat_result, send_counts, input_offsets, MPI_DOUBLE, 0, MPI_COMM_WORLD);  // ricevo
+        MPI_Gatherv(my_righe_ris, send_counts[my_rank], MPI_DOUBLE, mat_result, send_counts, input_offsets, MPI_DOUBLE, 0, MPI_COMM_WORLD);  // ricevo
 
         #ifdef DEBUG
-        printf("--- MATRICE RISULTATO ---\n");
+        printf("\n--- MATRICE RISULTATO ---\n");
         stampa_matrice(mat_result, dim_result);
         #endif 
 
+        free(mat_result);
         // ora che ho eventualmente fatto anche il controllo sulla correttezza del risultato libero
         free(mat_input);
     }
     else {
-        MPI_Gatherv(&my_righe_ris, send_counts[my_rank], MPI_DOUBLE, NULL, send_counts, input_offsets, MPI_DOUBLE, 0, MPI_COMM_WORLD);    // invio
+        MPI_Gatherv(my_righe_ris, send_counts[my_rank], MPI_DOUBLE, NULL, send_counts, input_offsets, MPI_DOUBLE, 0, MPI_COMM_WORLD);    // invio
     }
     
-    MPI_Finalize();
     free(my_righe);
     free(my_righe_ris);
     free(send_counts);
     free(input_offsets);
+
+    MPI_Finalize();
+    
     
     return EXIT_SUCCESS;
 }
