@@ -1,12 +1,71 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#include <math.h>
 #include <time.h>
 
 #define DEBUG 1
 
 #define RESET   "\x1b[0m"    // Resetta i colori
 #define RED     "\x1b[31m"   // Rosso
+#define GREEN   "\x1b[32m"   // Verde
+
+#ifdef DEBUG
+void check_matrici_uguali(const double* mat_a, const double* mat_b, int dim) {
+    double epsilon = 1E-8;
+
+    for(int i=0; i<dim; i++) {
+        for(int j=0; j<dim; j++) {
+            if( fabs(mat_a[i*dim + j] - mat_b[i*dim + j]) > epsilon) {
+                printf("%sle matrici differiscono al campo [%d, %d]\n", i, j, RED);
+                printf("\t%f != %f%s\n", mat_a[i*dim + j], mat_b[i*dim + j], RESET);
+                
+                return;
+            } 
+        }     
+    }
+
+    printf("\n%sLE MATRICI SONO UGUALI%s\n\n", GREEN, RESET);
+}
+
+double calcola_media_intorno(const double* mat_input, int dim_input, int riga, int colonna) {
+    double somma = 0.0;
+
+    /*
+        considero l'intorno 3x3 dell'elemento corrente
+    */
+    for(int i=-1; i<=1; i++) {
+        for(int j=-1; j<=1; j++) {
+            int riga_intorno = riga + i;
+            int colonna_intorno = colonna + j;
+
+            // controllo se sto considerando l'intorno di un elemento su un bordo della matrice
+            if( (riga_intorno<0 || riga_intorno>=dim_input) || (colonna_intorno<0 || colonna_intorno>=dim_input) ) {
+                somma += 0.0;
+            }
+            else {
+                somma += mat_input[riga_intorno*dim_input + colonna_intorno];
+            }
+        }
+    }
+
+    return somma/9;
+}
+
+void pseudo_convoluzione(const double* mat_input, double* mat_output, int dim_input, int dim_output) {
+    // scorro gli elementi PARI della matrice di input
+    // es: (0; 0), (0; 2), ..., (2; 0), (2; 2), ...
+    for(int i=0; i<dim_input; i+=2) {
+        for(int j=0; j<dim_input; j+=2) {
+            // calcolo la media dell'intorno del punto corrente
+            double media_intorno = calcola_media_intorno(mat_input, dim_input, i, j);
+            mat_output[(i/2)*dim_output + (j/2)] = media_intorno;
+        }     
+    }
+}
+#endif
+
+
 
 void stampa_matrice_evidenziata(const double* mat, int dim) {
     for(int i=0; i<dim; i++) {
@@ -239,7 +298,7 @@ int main(int argc, char* argv[]) {
     /*
         Ogni processo:
             - scorre tutti gli elementi ricevuti dalla scatterv
-            - calcola la media dell'interno dei punti giusti
+            - calcola la media dell'intorno dei punti giusti
             - costruisce il proprio pezzo della matrice risultato
     */
     int riga_ris_parziale = 0;
@@ -247,10 +306,12 @@ int main(int argc, char* argv[]) {
     for(int j=0; j<send_counts[my_rank]; j++) {
         int riga_globale    = (j+input_offsets[my_rank]) / dim_matrix;
         int colonna_globale = (j+input_offsets[my_rank]) % dim_matrix;
+        int riga_locale    = j / dim_matrix;
+        int colonna_locale = j % dim_matrix;
 
         // calcolo la media dell'intorno dei soli elementi con entrambi gli indici pari
         if(riga_globale%2 == 0 && colonna_globale%2 == 0) {
-            double media_intorno = calcola_media_intorno_ris_parziale(my_righe, dim_matrix, send_counts[my_rank], riga_ris_parziale, colonna_ris_parziale);
+            double media_intorno = calcola_media_intorno_ris_parziale(my_righe, dim_matrix, send_counts[my_rank], riga_locale, colonna_locale);
             my_righe_ris[riga_ris_parziale*dim_result + colonna_ris_parziale] = media_intorno;
 
             #ifdef DEBUG
@@ -272,11 +333,12 @@ int main(int argc, char* argv[]) {
         
     //collettore 
     if (my_rank==0) {   
-        int size_mat_result = dim_result*dim_result*sizeof(double);
-        double* mat_result = malloc(size_mat_result);
+        int size_result = dim_result*dim_result*sizeof(double);
+        double* mat_result = malloc(size_result);
 
         MPI_Gather(my_righe_ris, num_righe_ris_per_processo*dim_result, MPI_DOUBLE,
                    mat_result, num_righe_ris_per_processo*dim_result, MPI_DOUBLE, 0, MPI_COMM_WORLD);  // ricevo
+
 
         #ifdef DEBUG
         printf("Processo %d: \n", my_rank);
@@ -284,15 +346,23 @@ int main(int argc, char* argv[]) {
             printf("\tinvia %f\n", my_righe_ris[i]);
         }
         printf("\n");
-        #endif
-
-        #ifdef DEBUG
+        
         printf("\n--- MATRICE RISULTATO ---\n");
         stampa_matrice(mat_result, dim_result);
+
+        /* controllo correttezza risultato */
+        double* mat_result_sequenziale = malloc(size_result);
+        pseudo_convoluzione(mat_input, mat_result_sequenziale, dim_matrix, dim_result);
+
+        printf("--- MATRICE RISULTATO SEQUENZIALE ---\n");
+        stampa_matrice(mat_result_sequenziale, dim_result);
+        
+        check_matrici_uguali(mat_result, mat_result_sequenziale, dim_result);
+
+        free(mat_result_sequenziale);
         #endif 
 
         free(mat_result);
-        // ora che ho eventualmente fatto anche il controllo sulla correttezza del risultato libero
         free(mat_input);
     }
     else {
