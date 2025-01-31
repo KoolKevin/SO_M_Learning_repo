@@ -140,6 +140,7 @@ int main(int argc, char* argv[]) {
     MPI_Init(&argc, &argv);
     
     int num_proc, my_rank;
+    double start, end, local_elapsed, global_elapsed;
     MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
@@ -197,7 +198,13 @@ int main(int argc, char* argv[]) {
         - gli offset rispetto all'inizio della matrice da cui far partire
             gli invii dei dati
             - input offsets[num_proc] 
+
+        NB: considero questo tempo nella misurazione del
+        tempo di calcolo della semi-riduzione  
     */
+    MPI_Barrier(MPI_COMM_WORLD);
+    start=MPI_Wtime();
+
     int* send_counts = malloc(num_proc * sizeof(int));
     int* input_offsets = malloc(num_proc * sizeof(int));
 
@@ -224,8 +231,16 @@ int main(int argc, char* argv[]) {
             send_counts[i] -= dim_matrix;
         }
     }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    end=MPI_Wtime();
+    local_elapsed = end-start;
+
+
     
     // il nodo di rank 0 definisce, inizializza e distribuisce la matrice di input
+    // (NB: non considero l'inizializzazine della matrice nel tempo di calcolo analogmanete
+    //  a come ho fatto con OMP)
     double* mat_input;
     if (my_rank == 0) {
         #ifdef DEBUG
@@ -255,6 +270,7 @@ int main(int argc, char* argv[]) {
         stampa_matrice_evidenziata(mat_input, dim_matrix);
         #endif
 
+        start=MPI_Wtime();
         // int MPI_Scatterv(
         //     const void *sendbuf,   // Buffer dei dati da inviare
         //     const int *sendcounts, // Numero di elementi da inviare a ciascun processo
@@ -277,6 +293,7 @@ int main(int argc, char* argv[]) {
         #endif
     }
     else {
+        start=MPI_Wtime();
         MPI_Scatterv(NULL, send_counts, input_offsets, MPI_DOUBLE, my_righe, send_counts[my_rank], MPI_DOUBLE, 0, MPI_COMM_WORLD); // destinatari
 
         #ifdef DEBUG
@@ -326,8 +343,9 @@ int main(int argc, char* argv[]) {
         }
     }     
 
-    MPI_Barrier(MPI_COMM_WORLD);
-
+    #ifdef DEBUG
+    MPI_Barrier(MPI_COMM_WORLD);    // per ordinare le stampe
+    #endif
 
 
         
@@ -376,6 +394,16 @@ int main(int argc, char* argv[]) {
         }
         printf("\n");
         #endif
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    end=MPI_Wtime();
+    local_elapsed += end-start;
+
+    MPI_Reduce(&local_elapsed, &global_elapsed, 1 , MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    if (my_rank == 0) { 
+        printf("\n\n\n%sTempo impiegato: %f secondi%s\n", GREEN, global_elapsed, RESET);
+        printf("----------------------- FINE -----------------------\n\n\n");
     }
     
     free(my_righe);

@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
     stampa_matrice(mat_risultato, dim_risultato);
     #endif
 
-    printf("Elapsed parallel:\t %f ms;\n", elapsed_parallel*1000);
+    printf("Elapsed OMP:\t %f ms;\n", elapsed_parallel*1000);
 
     free(mat_input);
     free(mat_risultato);
