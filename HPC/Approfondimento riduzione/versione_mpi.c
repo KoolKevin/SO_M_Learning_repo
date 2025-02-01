@@ -141,6 +141,9 @@ int main(int argc, char* argv[]) {
 
     int num_proc, my_rank;
     double start, end, local_elapsed, global_elapsed;
+
+    MPI_Init(&argc, &argv);
+    
     MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
@@ -409,7 +412,7 @@ int main(int argc, char* argv[]) {
     printf("\t[processo %d]: %f ms per concludere\n", my_rank, local_elapsed*1000);
     #endif
 
-    PI_Barrier(MPI_COMM_WORLD); // per stampa
+    MPI_Barrier(MPI_COMM_WORLD); // per stampa
     
     // NB: riduco al risultato minimo! Siccome i processi non master (rank != 0)
     // aspettano l'inizializzazione della matrice fatta dal processo master.

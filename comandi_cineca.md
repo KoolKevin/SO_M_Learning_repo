@@ -17,7 +17,7 @@
 5) Per compilare con MPI
 
 	module load autoload intelmpi
- 	mpiicc -std=c99 sommavet.c –o sommavet
+ 	mpiicc -std=c99 -fopenmp -o versione_mpi versione_mpi.c -lm
 
 6) Per mettere in coda l'esecuzione del programma
 

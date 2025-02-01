@@ -11,4 +11,4 @@
 #SBATCH -o job_sequenziale.out
 #SBATCH -e job_sequenziale.err
 
-srun  ./versione_sequenziale 10000 $num_thread
+srun  ./versione_sequenziale 10000
