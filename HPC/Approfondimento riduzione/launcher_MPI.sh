@@ -5,16 +5,11 @@
 
 #SBATCH --job-name=kkoltraka
 #SBATCH -t 00:05:00
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=2
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=5
 
-#SBATCH -o job.out
-#SBATCH -e job.err
+#SBATCH -o job_mpi.out
+#SBATCH -e job_mpi.err
 
 module load autoload intelmpi
-srun ./versione_mpi 3
-
-# for I in 12 24 48; do
-# echo "Launching calculateR $I"
-# srun calculateR $I
-# done
+srun ./versione_mpi 10000

@@ -1,0 +1,40 @@
+Launching ./versione_omp 10000 1
+Numero di core (logici) disponibili: 48
+Elapsed OMP:	 1131.214532 ms;
+----------------------- FINE -----------------------
+
+
+Launching ./versione_omp 10000 5
+Numero di core (logici) disponibili: 48
+Elapsed OMP:	 227.725635 ms;
+----------------------- FINE -----------------------
+
+
+Launching ./versione_omp 10000 10
+Numero di core (logici) disponibili: 48
+Elapsed OMP:	 113.892767 ms;
+----------------------- FINE -----------------------
+
+
+Launching ./versione_omp 10000 25
+Numero di core (logici) disponibili: 48
+Elapsed OMP:	 47.341747 ms;
+----------------------- FINE -----------------------
+
+
+Launching ./versione_omp 10000 48
+Numero di core (logici) disponibili: 48
+Elapsed OMP:	 25.737449 ms;
+----------------------- FINE -----------------------
+
+
+Launching ./versione_omp 10000 50
+Numero di core (logici) disponibili: 48
+Elapsed OMP:	 119.028552 ms;
+----------------------- FINE -----------------------
+
+
+Launching ./versione_omp 10000 100
+Numero di core (logici) disponibili: 48
+Elapsed OMP:	 84.319772 ms;
+----------------------- FINE -----------------------

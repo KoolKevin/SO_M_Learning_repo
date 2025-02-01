@@ -4,13 +4,15 @@
 #include <math.h>
 #include <time.h>
 
-#define DEBUG 1
+// #define DEBUG 1
+#define DEBUG_TEMPI 1
+#define CHECK_CORRETTEZZA 1
 
 #define RESET   "\x1b[0m"    // Resetta i colori
 #define RED     "\x1b[31m"   // Rosso
 #define GREEN   "\x1b[32m"   // Verde
 
-#ifdef DEBUG
+#ifdef CHECK_CORRETTEZZA
 void check_matrici_uguali(const double* mat_a, const double* mat_b, int dim) {
     double epsilon = 1E-8;
 
@@ -135,7 +137,7 @@ int main(int argc, char* argv[]) {
     }
 
     int dim_matrix = atoi(argv[1]);
-    int dim_result = (dim_matrix+1)/2;
+    int dim_result = (dim_matrix+1)/2;  // approssimato per eccesso
 
     MPI_Init(&argc, &argv);
     
@@ -144,14 +146,12 @@ int main(int argc, char* argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-    #ifdef DEBUG
     if (my_rank == 0) {
         printf("\n");
         printf("Dim matrice in input: %dx%d\n", dim_matrix, dim_matrix);
         printf("Dim matrice in output: %dx%d\n", dim_result, dim_result);
         printf("Num di processi paralleli: %d\n", num_proc);
     }
-    #endif
 
     /*
         IPOTESI SEMPLIFICATIVA:
@@ -236,6 +236,9 @@ int main(int argc, char* argv[]) {
     end=MPI_Wtime();
     local_elapsed = end-start;
 
+    #ifdef DEBUG_TEMPI
+    printf("[processo %d]: %f ms per preparare l'invio dei dati\n", my_rank, local_elapsed*1000);
+    #endif
 
     
     // il nodo di rank 0 definisce, inizializza e distribuisce la matrice di input
@@ -367,13 +370,16 @@ int main(int argc, char* argv[]) {
         
         printf("\n--- MATRICE RISULTATO ---\n");
         stampa_matrice(mat_result, dim_result);
+        #endif
 
-        /* controllo correttezza risultato */
+        #ifdef CHECK_CORRETTEZZA
         double* mat_result_sequenziale = malloc(size_result);
         pseudo_convoluzione(mat_input, mat_result_sequenziale, dim_matrix, dim_result);
 
+        #ifdef DEBUG
         printf("--- MATRICE RISULTATO SEQUENZIALE ---\n");
         stampa_matrice(mat_result_sequenziale, dim_result);
+        #endif
         
         check_matrici_uguali(mat_result, mat_result_sequenziale, dim_result);
 
@@ -400,9 +406,13 @@ int main(int argc, char* argv[]) {
     end=MPI_Wtime();
     local_elapsed += end-start;
 
+    #ifdef DEBUG_TEMPI
+    printf("\t[processo %d]: %f ms per concludere\n", my_rank, local_elapsed*1000);
+    #endif
+
     MPI_Reduce(&local_elapsed, &global_elapsed, 1 , MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
     if (my_rank == 0) { 
-        printf("\n\n\n%sTempo impiegato: %f secondi%s\n", GREEN, global_elapsed, RESET);
+        printf("\n\n\n%sTempo impiegato: %f ms%s\n", GREEN, global_elapsed*1000, RESET);
         printf("----------------------- FINE -----------------------\n\n\n");
     }
     
