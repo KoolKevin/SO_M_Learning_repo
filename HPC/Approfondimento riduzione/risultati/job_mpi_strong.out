@@ -1,0 +1,70 @@
+Dim matrice in input: 10000x10000
+Dim matrice in output: 5000x5000
+Num di processi paralleli: **1 (1 nodo, 1 processo)**
+Num di righe del risultato calcolate da ogni singolo processo: 5000
+
+
+
+**Tempo impiegato: 1375.131911 ms**
+----------------------- FINE -----------------------
+
+Dim matrice in input: 10000x10000
+Dim matrice in output: 5000x5000
+Num di processi paralleli: **5 (1 nodo, 5 processi)**
+Num di righe del risultato calcolate da ogni singolo processo: 1000
+
+
+
+**Tempo impiegato: 396.070187 ms**
+----------------------- FINE -----------------------
+
+Dim matrice in input: 10000x10000
+Dim matrice in output: 5000x5000
+Num di processi paralleli: **5 (5 nodi, 1 processo)**
+Num di righe del risultato calcolate da ogni singolo processo: 1000
+
+
+
+**Tempo impiegato: 403.127678 ms**
+----------------------- FINE -----------------------
+
+Dim matrice in input: 10000x10000
+Dim matrice in output: 5000x5000
+Num di processi paralleli: **10 (1 nodo, 10 processi)**
+Num di righe del risultato calcolate da ogni singolo processo: 500
+
+
+
+**Tempo impiegato: 426.052168 ms**
+----------------------- FINE -----------------------
+
+Dim matrice in input: 10000x10000
+Dim matrice in output: 5000x5000
+Num di processi paralleli: **25 (5 nodi, 5 processi)**
+Num di righe del risultato calcolate da ogni singolo processo: 200
+
+
+
+**Tempo impiegato: 389.942311 ms**
+----------------------- FINE -----------------------
+
+Dim matrice in input: 10000x10000
+Dim matrice in output: 5000x5000
+Num di processi paralleli: **50 (10 nodi, 5 processi)**
+Num di righe del risultato calcolate da ogni singolo processo: 100
+
+
+
+**Tempo impiegato: 366.412511 ms**
+----------------------- FINE -----------------------
+
+Dim matrice in input: 10000x10000
+Dim matrice in output: 5000x5000
+Num di processi paralleli: **100 (20 nodi, 5 processi)**
+Num di righe del risultato calcolate da ogni singolo processo: 50
+
+
+
+**Tempo impiegato: 336.526251 ms**
+----------------------- FINE -----------------------
+

@@ -1,0 +1,111 @@
+Dim matrice in input: 10000x10000
+Dim matrice in output: 5000x5000
+Num di processi paralleli: 2
+Num di righe del risultato calcolate da ogni singolo processo: 2500
+
+[processo 0]: 0.004798 ms per preparare l'invio dei dati
+[processo 1]: 0.005035 ms per preparare l'invio dei dati
+
+[processo 0]: 329.033162 ms per effettuare l'invio dei dati
+[processo 1]: 2264.289781 ms per effettuare l'invio dei dati
+
+[processo 0]: 560.690224 ms per effettuare il calcolo di 2500 righe del risultato
+[processo 1]: 560.689174 ms per effettuare il calcolo di 2500 righe del risultato
+
+[processo 0]: 94.919610 ms per recuperare i dati con la gather dai vari processi
+[processo 1]: 94.919397 ms per recuperare i dati con la gather dai vari processi
+
+
+
+Tempo impiegato: 984.647794 ms
+----------------------- FINE -----------------------
+
+
+Dim matrice in input: 10000x10000
+Dim matrice in output: 5000x5000
+Num di processi paralleli: 10
+Num di righe del risultato calcolate da ogni singolo processo: 500
+[processo 0]: 7.502303 ms per preparare l'invio dei dati
+[processo 1]: 7.515890 ms per preparare l'invio dei dati
+[processo 2]: 7.505882 ms per preparare l'invio dei dati
+[processo 3]: 7.508063 ms per preparare l'invio dei dati
+[processo 4]: 7.499315 ms per preparare l'invio dei dati
+[processo 6]: 7.507161 ms per preparare l'invio dei dati
+[processo 7]: 0.004251 ms per preparare l'invio dei dati
+[processo 8]: 7.507052 ms per preparare l'invio dei dati
+[processo 9]: 7.506300 ms per preparare l'invio dei dati
+
+[processo 5]: 2161.516481 ms per effettuare l'invio dei dati    // processo che aspetta anche l'inizializzazione della matrice con rand()
+[processo 0]: 293.174697 ms per effettuare l'invio dei dati     // processo master che misura effettivamente solo l'invio dei dati con la scatter
+[processo 6]: 2161.355647 ms per effettuare l'invio dei dati
+[processo 1]: 2161.512596 ms per effettuare l'invio dei dati
+[processo 7]: 2161.518529 ms per effettuare l'invio dei dati
+[processo 2]: 2161.511908 ms per effettuare l'invio dei dati
+[processo 8]: 2161.520852 ms per effettuare l'invio dei dati
+[processo 3]: 2161.520166 ms per effettuare l'invio dei dati
+[processo 9]: 2161.517460 ms per effettuare l'invio dei dati
+[processo 4]: 2161.517743 ms per effettuare l'invio dei dati
+
+[processo 5]: 108.868287 ms per effettuare il calcolo di 500 righe del risultato
+[processo 0]: 108.868713 ms per effettuare il calcolo di 500 righe del risultato
+[processo 6]: 108.868343 ms per effettuare il calcolo di 500 righe del risultato
+[processo 1]: 108.868351 ms per effettuare il calcolo di 500 righe del risultato
+[processo 7]: 108.868287 ms per effettuare il calcolo di 500 righe del risultato
+[processo 2]: 108.868416 ms per effettuare il calcolo di 500 righe del risultato
+[processo 8]: 108.868524 ms per effettuare il calcolo di 500 righe del risultato
+[processo 3]: 108.868761 ms per effettuare il calcolo di 500 righe del risultato
+[processo 9]: 108.868271 ms per effettuare il calcolo di 500 righe del risultato
+[processo 4]: 108.868680 ms per effettuare il calcolo di 500 righe del risultato
+
+[processo 5]: 65.199848 ms per recuperare i dati con la gather dai vari processi
+[processo 6]: 65.199919 ms per recuperare i dati con la gather dai vari processi
+[processo 0]: 65.206753 ms per recuperare i dati con la gather dai vari processi
+[processo 7]: 65.199817 ms per recuperare i dati con la gather dai vari processi
+[processo 1]: 65.206522 ms per recuperare i dati con la gather dai vari processi
+[processo 8]: 65.199926 ms per recuperare i dati con la gather dai vari processi
+[processo 2]: 65.206351 ms per recuperare i dati con la gather dai vari processi
+[processo 9]: 65.199821 ms per recuperare i dati con la gather dai vari processi
+[processo 3]: 65.206661 ms per recuperare i dati con la gather dai vari processi
+[processo 4]: 65.206363 ms per recuperare i dati con la gather dai vari processi
+
+
+
+Tempo impiegato: 474.752467 ms
+----------------------- FINE -----------------------
+
+
+Dim matrice in input: 10000x10000
+Dim matrice in output: 5000x5000
+Num di processi paralleli: 100
+Num di righe del risultato calcolate da ogni singolo processo: 50
+
+[processo 0]: 0.523478 ms per preparare l'invio dei dati
+[processo 50]: 0.515268 ms per preparare l'invio dei dati
+...
+[processo 19]: 0.560447 ms per preparare l'invio dei dati
+[processo 24]: 0.455608 ms per preparare l'invio dei dati
+
+[processo 35]: 2156.065551 ms per effettuare l'invio dei dati   // processo che aspetta anche l'inizializzazione della matrice con rand()
+[processo 0]: 285.308097 ms per effettuare l'invio dei dati     // processo master che misura effettivamente solo l'invio dei dati con la scatter
+...
+[processo 55]: 2156.059646 ms per effettuare l'invio dei dati
+[processo 15]: 2156.067586 ms per effettuare l'invio dei dati
+
+
+[processo 40]: 11.458857 ms per effettuare il calcolo di 50 righe del risultato
+[processo 5]: 11.459536 ms per effettuare il calcolo di 50 righe del risultato
+...
+[processo 59]: 11.458624 ms per effettuare il calcolo di 50 righe del risultato
+[processo 19]: 11.457649 ms per effettuare il calcolo di 50 righe del risultato
+
+[processo 40]: 76.631111 ms per recuperare i dati con la gather dai vari processi
+[processo 10]: 76.630979 ms per recuperare i dati con la gather dai vari processi
+...
+[processo 59]: 76.630537 ms per recuperare i dati con la gather dai vari processi
+[processo 24]: 76.630346 ms per recuperare i dati con la gather dai vari processi
+
+
+
+
+Tempo impiegato: 373.927543 ms
+----------------------- FINE -----------------------

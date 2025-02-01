@@ -143,7 +143,7 @@ int main(int argc, char* argv[]) {
     double start, end, local_elapsed, global_elapsed;
 
     MPI_Init(&argc, &argv);
-    
+
     MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
@@ -310,7 +310,18 @@ int main(int argc, char* argv[]) {
         #endif
     }
 
+    
+    #ifdef DEBUG_TEMPI
+    MPI_Barrier(MPI_COMM_WORLD);
+    end=MPI_Wtime();
+    local_elapsed += end-start;
 
+    double scatter_elapsed = end-start;
+    printf("[processo %d]: %f ms per effettuare l'invio dei dati\n", my_rank, scatter_elapsed*1000);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    start=MPI_Wtime();
+    #endif
 
 
 
@@ -347,6 +358,18 @@ int main(int argc, char* argv[]) {
             }
         }
     }     
+
+    #ifdef DEBUG_TEMPI
+    MPI_Barrier(MPI_COMM_WORLD);
+    end=MPI_Wtime();
+    local_elapsed += end-start;
+
+    double compute_elapsed = end-start;
+    printf("[processo %d]: %f ms per effettuare il calcolo di %d righe del risultato\n", my_rank, compute_elapsed*1000, num_righe_ris_per_processo);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    start=MPI_Wtime();
+    #endif
 
     #ifdef DEBUG
     MPI_Barrier(MPI_COMM_WORLD);    // per ordinare le stampe
@@ -409,7 +432,8 @@ int main(int argc, char* argv[]) {
     local_elapsed += end-start;
 
     #ifdef DEBUG_TEMPI
-    printf("\t[processo %d]: %f ms per concludere\n", my_rank, local_elapsed*1000);
+    double gather_elapsed = end-start;
+    printf("\t[processo %d]: %f ms per recuperare i dati con la gather dai vari processi\n", my_rank, gather_elapsed*1000);
     #endif
 
     MPI_Barrier(MPI_COMM_WORLD); // per stampa
