@@ -139,12 +139,8 @@ int main(int argc, char* argv[]) {
     int dim_matrix = atoi(argv[1]);
     int dim_result = (dim_matrix+1)/2;  // approssimato per eccesso
 
-    MPI_Init(&argc, &argv);
-    double start=MPI_Wtime();
-
-    
     int num_proc, my_rank;
-    double local_elapsed, global_elapsed;
+    double start, end, local_elapsed, global_elapsed;
     MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
@@ -206,8 +202,8 @@ int main(int argc, char* argv[]) {
         NB: considero questo tempo nella misurazione del
         tempo di calcolo della semi-riduzione  
     */
-    // MPI_Barrier(MPI_COMM_WORLD);
-    // start=MPI_Wtime();
+    MPI_Barrier(MPI_COMM_WORLD);
+    start=MPI_Wtime();
 
     int* send_counts = malloc(num_proc * sizeof(int));
     int* input_offsets = malloc(num_proc * sizeof(int));
@@ -236,15 +232,14 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // MPI_Barrier(MPI_COMM_WORLD);
-    // end=MPI_Wtime();
-    // local_elapsed = end-start;
+    MPI_Barrier(MPI_COMM_WORLD);
+    end=MPI_Wtime();
+    local_elapsed = end-start;
 
-    // #ifdef DEBUG_TEMPI
-    // printf("[processo %d]: %f ms per preparare l'invio dei dati\n", my_rank, local_elapsed*1000);
-    // #endif
+    #ifdef DEBUG_TEMPI
+    printf("[processo %d]: %f ms per preparare l'invio dei dati\n", my_rank, local_elapsed*1000);
+    #endif
 
-    
     // il nodo di rank 0 definisce, inizializza e distribuisce la matrice di input
     // (NB: non considero l'inizializzazine della matrice nel tempo di calcolo analogmanete
     //  a come ho fatto con OMP)
@@ -277,7 +272,7 @@ int main(int argc, char* argv[]) {
         stampa_matrice_evidenziata(mat_input, dim_matrix);
         #endif
 
-        // start=MPI_Wtime();
+        start=MPI_Wtime();
         // int MPI_Scatterv(
         //     const void *sendbuf,   // Buffer dei dati da inviare
         //     const int *sendcounts, // Numero di elementi da inviare a ciascun processo
@@ -300,7 +295,7 @@ int main(int argc, char* argv[]) {
         #endif
     }
     else {
-        // start=MPI_Wtime();
+        start=MPI_Wtime();
         MPI_Scatterv(NULL, send_counts, input_offsets, MPI_DOUBLE, my_righe, send_counts[my_rank], MPI_DOUBLE, 0, MPI_COMM_WORLD); // destinatari
 
         #ifdef DEBUG
@@ -407,7 +402,7 @@ int main(int argc, char* argv[]) {
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    double end=MPI_Wtime();
+    end=MPI_Wtime();
     local_elapsed += end-start;
 
     #ifdef DEBUG_TEMPI
@@ -415,8 +410,11 @@ int main(int argc, char* argv[]) {
     #endif
 
     PI_Barrier(MPI_COMM_WORLD); // per stampa
-
-    MPI_Reduce(&local_elapsed, &global_elapsed, 1 , MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    
+    // NB: riduco al risultato minimo! Siccome i processi non master (rank != 0)
+    // aspettano l'inizializzazione della matrice fatta dal processo master.
+    // Questo tempo NON lo voglio considerare.
+    MPI_Reduce(&local_elapsed, &global_elapsed, 1 , MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
     if (my_rank == 0) { 
         printf("\n\n\n%sTempo impiegato: %f ms%s\n", GREEN, global_elapsed*1000, RESET);
         printf("----------------------- FINE -----------------------\n\n\n");
