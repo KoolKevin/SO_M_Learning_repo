@@ -75,6 +75,8 @@ double pseudo_convoluzione_parallela(const double* mat_input, double* mat_output
 }
 
 int main(int argc, char** argv) {
+    double start = omp_get_wtime();
+
     if(argc < 3) {
         printf("usage: ./conv <dim_matrix> <num_thread>\n");
         exit(1);
@@ -117,7 +119,10 @@ int main(int argc, char** argv) {
     stampa_matrice(mat_risultato, dim_risultato);
     #endif
 
-    printf("Elapsed OMP:\t %f ms;\n", elapsed_parallel*1000);
+    double end = omp_get_wtime();
+
+    printf("Elapsed: %f ms;\n", end-start*1000);
+    printf("Elapsed parte parallela: %f ms;\n", elapsed_parallel*1000);
 
     free(mat_input);
     free(mat_risultato);
