@@ -9,8 +9,8 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH -c 48
 
-#SBATCH -o job_omp.out
-#SBATCH -e job_omp.err
+#SBATCH -o job_omp_strong.out
+#SBATCH -e job_omp_strong.err
 
 for num_thread in 1 5 10 25 48 50 100; do
  	echo "Launching ./versione_omp 10000 $num_thread"
