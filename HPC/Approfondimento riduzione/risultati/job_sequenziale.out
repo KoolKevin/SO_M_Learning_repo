@@ -1,2 +1,22 @@
-Elapsed sequential:	 1134.442233 ms
+Elapsed sequential:	 0.446588 ms; con N=200
+----------------------- FINE -----------------------
+
+
+Launching ./versione_sequenziale 1000
+Elapsed sequential:	 11.191164 ms; con N=1000
+----------------------- FINE -----------------------
+
+
+Launching ./versione_sequenziale 2000
+Elapsed sequential:	 45.008917 ms; con N=2000
+----------------------- FINE -----------------------
+
+
+Launching ./versione_sequenziale 5000
+Elapsed sequential:	 280.978491 ms; con N=5000
+----------------------- FINE -----------------------
+
+
+Launching ./versione_sequenziale 10000
+Elapsed sequential:	 1134.632962 ms; con N=10000
 ----------------------- FINE -----------------------

@@ -1,40 +1,51 @@
-Launching ./versione_omp 10000 1
+N = 2000
+
+----------------------------------------------------
+
+Launching ./versione_omp  1
+Numero di righe della matrice risultato per thread: 1000
 Numero di core (logici) disponibili: 48
-Elapsed OMP:	 1131.214532 ms;
+Elapsed parte parallela: 44.741804 ms;
 ----------------------- FINE -----------------------
 
 
-Launching ./versione_omp 10000 5
+Launching ./versione_omp  5
+Numero di righe della matrice risultato per thread: 200
 Numero di core (logici) disponibili: 48
-Elapsed OMP:	 227.725635 ms;
+Elapsed parte parallela: 9.181882 ms;
 ----------------------- FINE -----------------------
 
 
-Launching ./versione_omp 10000 10
+Launching ./versione_omp  10
+Numero di righe della matrice risultato per thread: 100
 Numero di core (logici) disponibili: 48
-Elapsed OMP:	 113.892767 ms;
+Elapsed parte parallela: 4.787995 ms;
 ----------------------- FINE -----------------------
 
 
-Launching ./versione_omp 10000 25
+Launching ./versione_omp  25
+Numero di righe della matrice risultato per thread: 40
 Numero di core (logici) disponibili: 48
-Elapsed OMP:	 47.341747 ms;
+Elapsed parte parallela: 2.836376 ms;
 ----------------------- FINE -----------------------
 
 
-Launching ./versione_omp 10000 48
+Launching ./versione_omp  48
+Numero di righe della matrice risultato per thread: 20
 Numero di core (logici) disponibili: 48
-Elapsed OMP:	 25.737449 ms;
+Elapsed parte parallela: 2.363643 ms;
 ----------------------- FINE -----------------------
 
 
-Launching ./versione_omp 10000 50
+Launching ./versione_omp  50
+Numero di righe della matrice risultato per thread: 20
 Numero di core (logici) disponibili: 48
-Elapsed OMP:	 119.028552 ms;
+Elapsed parte parallela: 24.855021 ms;
 ----------------------- FINE -----------------------
 
 
-Launching ./versione_omp 10000 100
+Launching ./versione_omp  100
+Numero di righe della matrice risultato per thread: 10
 Numero di core (logici) disponibili: 48
-Elapsed OMP:	 84.319772 ms;
+Elapsed parte parallela: 15.938584 ms;
 ----------------------- FINE -----------------------

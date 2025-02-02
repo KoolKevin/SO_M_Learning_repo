@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
     stampa_matrice(mat_risultato, dim_risultato);
     #endif
 
-    printf("Elapsed sequential:\t %f ms\n", elapsed_sequential*1000);
+    printf("Elapsed sequential:\t %f ms; con N=%d\n", elapsed_sequential*1000, dim_matrix);
 
     free(mat_input);
     free(mat_risultato);

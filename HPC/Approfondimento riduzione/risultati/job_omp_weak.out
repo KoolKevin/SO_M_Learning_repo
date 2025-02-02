@@ -1,0 +1,33 @@
+Launching ./versione_omp 200 1
+Numero di righe della matrice risultato per thread: 100
+Numero di core (logici) disponibili: 48
+Elapsed parte parallela: 0.451364 ms;
+----------------------- FINE -----------------------
+
+
+Launching ./versione_omp 1000 5
+Numero di righe della matrice risultato per thread: 100
+Numero di core (logici) disponibili: 48
+Elapsed parte parallela: 2.353567 ms;
+----------------------- FINE -----------------------
+
+
+Launching ./versione_omp 2000 10
+Numero di righe della matrice risultato per thread: 100
+Numero di core (logici) disponibili: 48
+Elapsed parte parallela: 5.044275 ms;
+----------------------- FINE -----------------------
+
+
+Launching ./versione_omp 5000 25
+Numero di righe della matrice risultato per thread: 100
+Numero di core (logici) disponibili: 48
+Elapsed parte parallela: 12.473550 ms;
+----------------------- FINE -----------------------
+
+
+Launching ./versione_omp 9600 48
+Numero di righe della matrice risultato per thread: 100
+Numero di core (logici) disponibili: 48
+Elapsed parte parallela: 23.906642 ms;
+----------------------- FINE -----------------------

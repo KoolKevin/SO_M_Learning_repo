@@ -433,7 +433,7 @@ int main(int argc, char* argv[]) {
 
     #ifdef DEBUG_TEMPI
     double gather_elapsed = end-start;
-    printf("\t[processo %d]: %f ms per recuperare i dati con la gather dai vari processi\n", my_rank, gather_elapsed*1000);
+    printf("[processo %d]: %f ms per recuperare i dati con la gather dai vari processi\n", my_rank, gather_elapsed*1000);
     #endif
 
     MPI_Barrier(MPI_COMM_WORLD); // per stampa
