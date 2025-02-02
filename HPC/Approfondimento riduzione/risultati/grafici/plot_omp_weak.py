@@ -15,7 +15,7 @@ axes[0].set_ylabel("Speedup")
 axes[0].set_title("Speedup weak")
 axes[0].grid(True, linestyle="--", alpha=0.6)
 axes[0].legend()
-axes[0].set_xscale('log')  # Scala logaritmica sull'asse x
+# axes[0].set_xscale('log')  # Scala logaritmica sull'asse x
 
 # Secondo grafico: Efficienza
 axes[1].plot(num_threads, efficiency, 'ro-', markersize=6, label="Efficienza")
@@ -25,7 +25,7 @@ axes[1].set_title("Efficienza weak")
 axes[1].set_ylim(0, 1.2)  # Imposta il limite dell'asse y da 0 a 0.5
 axes[1].grid(True, linestyle="--", alpha=0.6)
 axes[1].legend()
-axes[1].set_xscale('log')  # Scala logaritmica sull'asse x
+# axes[1].set_xscale('log')  # Scala logaritmica sull'asse x
 
 # Mostra i grafici
 plt.tight_layout()
