@@ -31,3 +31,10 @@ Numero di righe della matrice risultato per thread: 100
 Numero di core (logici) disponibili: 48
 Elapsed parte parallela: 23.906642 ms;
 ----------------------- FINE -----------------------
+
+
+
+OSS:
+Tempo aumenta linearmente a causa
+- della gestione del più elevato numero di thread
+- del maggior numero di accessi alla memoria(limitati dalla banda?)
