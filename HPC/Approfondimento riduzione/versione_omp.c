@@ -82,13 +82,15 @@ int main(int argc, char** argv) {
 
     int dim_matrix = atoi(argv[1]);
     int num_threads = atoi(argv[2]);
+    // approssimo per eccesso (es: input 5x5 -> risultato 3x3)
+    int dim_risultato = (dim_matrix+1) / 2;
     
+    printf("Numero di righe della matrice risultato per thread: %d\n", dim_risultato/num_threads);
     printf("Numero di core (logici) disponibili: %d\n", omp_get_max_threads());
     omp_set_num_threads(num_threads);
 
     int size_input = dim_matrix*dim_matrix*sizeof(double);
-    // approssimo per eccesso (es: input 5x5 -> risultato 3x3)
-    int dim_risultato = (dim_matrix+1) / 2;
+    
     int size_risultato = dim_risultato*dim_risultato*sizeof(double);
     
     double* mat_input = malloc(size_input);
