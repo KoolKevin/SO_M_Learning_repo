@@ -8,11 +8,12 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH -c 48
+#SBATCH --mem=20GB # non funziona...
 
 #SBATCH -o job_omp_weak.out
 #SBATCH -e job_omp_weak.err
 
-for params in "200 1" "1000 5" "2000 10" "5000 25" "9600 48"; do
+for params in "2000 1" "4000 2" "6000 3" "8000 4" "10000 5"; do
     read dim num_thread <<< "$params"  # Divide la stringa nei due valori
 
     echo "Launching ./versione_omp $dim $num_thread"

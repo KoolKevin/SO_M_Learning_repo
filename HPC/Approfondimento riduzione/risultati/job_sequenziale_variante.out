@@ -1,0 +1,23 @@
+Launching ./versione_sequenziale 2000
+Elapsed sequential:	 44.726838 ms; con N=2000
+----------------------- FINE -----------------------
+
+
+Launching ./versione_sequenziale 4000
+Elapsed sequential:	 178.521639 ms; con N=4000
+----------------------- FINE -----------------------
+
+
+Launching ./versione_sequenziale 6000
+Elapsed sequential:	 405.048985 ms; con N=6000
+----------------------- FINE -----------------------
+
+
+Launching ./versione_sequenziale 8000
+Elapsed sequential:	 720.788261 ms; con N=8000
+----------------------- FINE -----------------------
+
+
+Launching ./versione_sequenziale 10000
+Elapsed sequential:	 1130.455101 ms; con N=10000
+----------------------- FINE -----------------------
