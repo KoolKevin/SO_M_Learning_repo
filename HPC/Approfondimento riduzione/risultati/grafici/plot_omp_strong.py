@@ -10,7 +10,7 @@ fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
 # Primo grafico: Speedup
 axes[0].plot(num_threads, speedup, 'bo-', markersize=6, label="Speedup")
-axes[0].axvline(48, color='black', linestyle='--', linewidth=1)  # Linea tratteggiata verticale
+axes[0].axvline(48, color='black', linestyle='--', linewidth=1, label="Limite 48 core")
 axes[0].set_xlabel("Numero di Thread")
 axes[0].set_ylabel("Speedup")
 axes[0].set_title("Speedup strong")
@@ -20,7 +20,7 @@ axes[0].legend()
 
 # Secondo grafico: Efficienza
 axes[1].plot(num_threads, efficiency, 'ro-', markersize=6, label="Efficienza")
-axes[1].axvline(48, color='black', linestyle='--', linewidth=1)  # Linea tratteggiata verticale
+axes[0].axvline(48, color='black', linestyle='--', linewidth=1, label="Limite 48 core")
 axes[1].set_xlabel("Numero di Thread")
 axes[1].set_ylabel("Efficienza")
 axes[1].set_title("Efficienza strong")
