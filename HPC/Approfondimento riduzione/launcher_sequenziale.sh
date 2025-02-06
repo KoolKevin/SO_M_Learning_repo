@@ -12,7 +12,7 @@
 #SBATCH -o job_sequenziale.out
 #SBATCH -e job_sequenziale.err
 
-for dim in 2000 4000 6000 8000 10000; do
+for dim in 1600 3200 4800 6400 8000 9600; do
     echo "Launching ./versione_sequenziale $dim"
     srun ./versione_sequenziale $dim
 done

@@ -13,7 +13,7 @@
 #SBATCH -o job_omp_weak.out
 #SBATCH -e job_omp_weak.err
 
-for params in "2000 1" "4000 2" "6000 3" "8000 4" "10000 5"; do
+for params in "1600 1" "3200 4" "4800 9" "6400 16" "8000 25" "9600 36"; do
     read dim num_thread <<< "$params"  # Divide la stringa nei due valori
 
     echo "Launching ./versione_omp $dim $num_thread"
