@@ -1,50 +1,64 @@
-Dim matrice in input: 200x200
-Dim matrice in output: 100x100
+Dim matrice in input: 1600x1600
+Dim matrice in output: 800x800
 Num di processi paralleli: 1
-Num di righe del risultato calcolate da ogni singolo processo: 100
+Num di righe del risultato calcolate da ogni singolo processo: 800
 
 
 
-Tempo impiegato: 0.687623 ms
+Tempo impiegato: 35.761791 ms
 ----------------------- FINE -----------------------
 
-Dim matrice in input: 1000x1000
-Dim matrice in output: 500x500
-Num di processi paralleli: 5
-Num di righe del risultato calcolate da ogni singolo processo: 100
+Dim matrice in input: 3200x3200
+Dim matrice in output: 1600x1600
+Num di processi paralleli: 4
+Num di righe del risultato calcolate da ogni singolo processo: 400
 
 
 
-Tempo impiegato: 9.065475 ms
+Tempo impiegato: 63.353846 ms
 ----------------------- FINE -----------------------
 
-Dim matrice in input: 2000x2000
-Dim matrice in output: 1000x1000
-Num di processi paralleli: 10
-Num di righe del risultato calcolate da ogni singolo processo: 100
+
+Dim matrice in input: 4806x4806
+Dim matrice in output: 2403x2403
+Num di processi paralleli: 9
+Num di righe del risultato calcolate da ogni singolo processo: 267
 
 
 
-Tempo impiegato: 17.663792 ms
+Tempo impiegato: 111.733408 ms
 ----------------------- FINE -----------------------
 
-Dim matrice in input: 5000x5000
-Dim matrice in output: 2500x2500
+
+Dim matrice in input: 6400x6400
+Dim matrice in output: 3200x3200
+Num di processi paralleli: 16
+Num di righe del risultato calcolate da ogni singolo processo: 200
+
+
+
+Tempo impiegato: 178.410916 ms
+----------------------- FINE -----------------------
+
+Dim matrice in input: 8000x8000
+Dim matrice in output: 4000x4000
 Num di processi paralleli: 25
-Num di righe del risultato calcolate da ogni singolo processo: 100
+Num di righe del risultato calcolate da ogni singolo processo: 160
 
 
 
-Tempo impiegato: 101.399074 ms
+Tempo impiegato: 287.630999 ms
 ----------------------- FINE -----------------------
 
-Dim matrice in input: 10000x10000
-Dim matrice in output: 5000x5000
-Num di processi paralleli: 50
-Num di righe del risultato calcolate da ogni singolo processo: 100
+Dim matrice in input: 9576x9576
+Dim matrice in output: 4788x4788
+Num di processi paralleli: 36
+Num di righe del risultato calcolate da ogni singolo processo: 133
 
 
 
-Tempo impiegato: 360.931472 ms
+Tempo impiegato: 409.066660 ms
 ----------------------- FINE -----------------------
+
+
 
