@@ -12,4 +12,4 @@ by a unique __inode number__.
     fd = open("/tmp/xyz", O_CREATE|O_RDWR);
     unlink("/tmp/xyz");
 
-This is an idiomatic (pratica comune ritenuta corretta) way to create a temporary inode with no name that will be __cleaned up when the process closes fd or exits__. Siccome il file non ha nome nessun altro che non ha accesso al fd puo accedere al file
+This is an idiomatic (pratica comune ritenuta corretta) way to create a temporary inode with no name that will be __cleaned up when the process closes fd or exits__. Siccome il file non ha nome, nessun che non abbia accesso al fd puo accedere al file
