@@ -6,8 +6,8 @@ User code may try to:
 - dereference pointers outside its allowed address space
 - it may attempt to execute any RISC-V instructions, even those not intended for user code
 - it may try to read and write any RISC-V control register
--  it may try to directly access device hardware
--  and it may pass clever values to system calls in an attempt to trick the kernel into crashing or doing something stupid
+- it may try to directly access device hardware
+- and it may pass clever values to system calls in an attempt to trick the kernel into crashing or doing something stupid
 
 
 The kernel’s goal is to:

@@ -12,7 +12,7 @@
 #SBATCH -o job_mpi_weak.out
 #SBATCH -e job_mpi_weak.err
 
-DIM=10000
+DIM=1600
 
 module load autoload intelmpi
 srun ./versione_mpi $DIM

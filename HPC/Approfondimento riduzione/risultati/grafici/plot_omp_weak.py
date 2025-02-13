@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt # type: ignore
 
 # Dati dalla tabella
-num_threads = [1, 5, 10, 25, 48]
-speedup = [1, 4.76, 8.93, 22.53, 47.45]
+num_threads = [1, 4, 9, 16, 25, 36]
+speedup = [1, 3.99, 8.98, 15.78, 24.25, 34.20]
 efficiency = [s/t for s, t in zip(speedup, num_threads)]  # Efficienza = Speedup / Num_threads
 
 # Creazione della figura con due sottografi
@@ -10,7 +10,6 @@ fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
 # Primo grafico: Speedup
 axes[0].plot(num_threads, speedup, 'bo-', markersize=6, label="Speedup")
-axes[0].axvline(48, color='black', linestyle='--', linewidth=1, label="Limite 48 core")
 axes[0].set_xlabel("Numero di Thread")
 axes[0].set_ylabel("Speedup")
 axes[0].set_title("Speedup weak")
@@ -20,7 +19,6 @@ axes[0].legend()
 
 # Secondo grafico: Efficienza
 axes[1].plot(num_threads, efficiency, 'ro-', markersize=6, label="Efficienza")
-axes[0].axvline(48, color='black', linestyle='--', linewidth=1, label="Limite 48 core")
 axes[1].set_xlabel("Numero di Thread")
 axes[1].set_ylabel("Efficienza")
 axes[1].set_title("Efficienza weak")

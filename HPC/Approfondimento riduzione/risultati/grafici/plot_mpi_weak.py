@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt # type: ignore
 
 # Dati dalla tabella
-num_threads = [1, 5, 10, 25, 50]
-speedup = [0.65, 1.23, 2.55, 2.77, 3.14]
+num_threads = [1, 4, 9, 16, 25, 36]
+speedup = [0.82, 1.83, 2.35, 2.60, 2.54, 2.56]
 efficiency = [s/t for s, t in zip(speedup, num_threads)]  # Efficienza = Speedup / Num_threads
 
 # Creazione della figura con due sottografi
@@ -13,6 +13,7 @@ axes[0].plot(num_threads, speedup, 'bo-', markersize=6, label="Speedup")
 axes[0].set_xlabel("Numero di Thread")
 axes[0].set_ylabel("Speedup")
 axes[0].set_title("Speedup weak")
+axes[0].set_ylim(0, 10)  # Imposta il limite dell'asse y da 0 a 0.5
 axes[0].grid(True, linestyle="--", alpha=0.6)
 axes[0].legend()
 # axes[0].set_xscale('log')  # Scala logaritmica sull'asse x

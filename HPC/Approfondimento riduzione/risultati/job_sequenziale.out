@@ -1,22 +1,28 @@
-Elapsed sequential:	 0.446588 ms; con N=200
+Launching ./versione_sequenziale 1600
+Elapsed sequential:	 29.174594 ms; con N=1600
 ----------------------- FINE -----------------------
 
 
-Launching ./versione_sequenziale 1000
-Elapsed sequential:	 11.191164 ms; con N=1000
+Launching ./versione_sequenziale 3200
+Elapsed sequential:	 116.306010 ms; con N=3200
 ----------------------- FINE -----------------------
 
 
-Launching ./versione_sequenziale 2000
-Elapsed sequential:	 45.008917 ms; con N=2000
+Launching ./versione_sequenziale 4800
+Elapsed sequential:	 263.015973 ms; con N=4800
 ----------------------- FINE -----------------------
 
 
-Launching ./versione_sequenziale 5000
-Elapsed sequential:	 280.978491 ms; con N=5000
+Launching ./versione_sequenziale 6400
+Elapsed sequential:	 463.611342 ms; con N=6400
 ----------------------- FINE -----------------------
 
 
-Launching ./versione_sequenziale 10000
-Elapsed sequential:	 1134.632962 ms; con N=10000
+Launching ./versione_sequenziale 8000
+Elapsed sequential:	 732.919053 ms; con N=8000
+----------------------- FINE -----------------------
+
+
+Launching ./versione_sequenziale 9600
+Elapsed sequential:	 1047.648156 ms; con N=9600
 ----------------------- FINE -----------------------

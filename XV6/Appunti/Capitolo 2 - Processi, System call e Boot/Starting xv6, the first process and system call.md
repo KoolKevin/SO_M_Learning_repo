@@ -4,7 +4,7 @@ NB: tutti i core eseguono quello che c'è in _\_entry_ma anche quello che c'è i
 NB_2: The RISC-V computer starts with __paging hardware disabled__: virtual addresses map directly to physical addresses.
 
 ### Entry
-The loader loads the xv6 kernel into memory at physical address __0x80000000__. The reason it places the kernel at 0x80000000 rather than 0x0 is because the address range 0x0:0x80000000 contains __I/O devices__.
+The loader loads the xv6 kernel into memory at physical address __0x80000000__. The reason it places the kernel at 0x80000000 rather than 0x0 is because __the address range 0x0:0x80000000 contains I/O devices__.
 
 __The instructions at _\_entry_ set up a stack so that xv6 can run C code__. Xv6 declares space for an initial stack, _stack0_ , in the file start.c (kernel/start.c:11) nel seguente modo: 
 
