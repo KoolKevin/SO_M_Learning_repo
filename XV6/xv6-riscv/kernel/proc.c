@@ -447,6 +447,17 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
 
+  /*
+    KKoltraka
+
+    Sembra che xv6 non abbia un descrittore speciale per il processo kernel
+      - l'array proc è riservato ai processi utente
+
+    Di conseguenza quando una CPU sta eseguendo il kernel, viene impostata a NULL (0)
+    la struct che descrive il processo in esecuzione su quest'ultima
+    
+    (Durante il boot non ho quindi bisogno di inizializzare mycpu)
+  */
   c->proc = 0;
   for(;;){
     // The most recent process to run may have had interrupts

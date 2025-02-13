@@ -6,6 +6,10 @@
         "user.h": "c",
         "fcntl.h": "c",
         "limits": "c",
-        "omp.h": "c"
+        "omp.h": "c",
+        "param.h": "c",
+        "memlayout.h": "c",
+        "riscv.h": "c",
+        "spinlock.h": "c"
     }
 }
