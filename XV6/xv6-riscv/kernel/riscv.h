@@ -225,8 +225,7 @@ w_pmpaddr0(uint64 x)
 /*
   KKoltraka
   per impostare la modalità di vm desiderata in xv6 (chiamata Sv39), bisogna scrivere nei 4 bit (bit di modalità) 
-  più alti del registro satp 1000, ovvero 8 shiftato di 60. A partire dai bit in fondo invece si specifica l'indirizzo
-  della page table del kernel
+  più alti del registro satp 1000, ovvero 8 shiftato di 60. A partire dai bit in fondo invece si specifica il PPN del kernel
 */
 #define SATP_SV39 (8L << 60)
 
