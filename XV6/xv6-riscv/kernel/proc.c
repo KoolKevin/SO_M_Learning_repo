@@ -38,7 +38,11 @@ proc_mapstacks(pagetable_t kpgtbl)
     char *pa = kalloc();
     if(pa == 0)
       panic("kalloc");
-    uint64 va = KSTACK((int) (p - proc));
+    // KSTACK calcola va considerando la pagina di guardia
+    // e partendo dalla pagina trampolino 
+    //
+    // p-proc = differenza tra puntatori = num proc fino ad ora
+    uint64 va = KSTACK((int) (p - proc));   
     kvmmap(kpgtbl, va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
   }
 }
