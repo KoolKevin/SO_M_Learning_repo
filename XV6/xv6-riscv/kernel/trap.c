@@ -48,7 +48,7 @@ usertrap(void)
   struct proc *p = myproc();
   
   // save user program counter.
-  p->trapframe->epc = r_sepc();
+  p->trapframe->epc = r_sepc(); // kkoltraka: sepc popolato dall'hardware!
   
   if(r_scause() == 8){
     // system call
@@ -141,7 +141,7 @@ void
 kerneltrap()
 {
   int which_dev = 0;
-  uint64 sepc = r_sepc();
+  uint64 sepc = r_sepc(); //kkoltraka: sepc popolato dall'hardware
   uint64 sstatus = r_sstatus();
   uint64 scause = r_scause();
   

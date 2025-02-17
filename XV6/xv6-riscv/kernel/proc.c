@@ -243,7 +243,10 @@ userinit(void)
   
   // allocate one user page and copy initcode's instructions
   // and data into it.
-  uvmfirst(p->pagetable, initcode, sizeof(initcode));
+  //
+  // kkoltraka:
+  // la pagetable ha già trampolino e trapframe dato che è allocata con proc_pagetable()
+  uvmfirst(p->pagetable, initcode, sizeof(initcode)); 
   p->sz = PGSIZE;
 
   // prepare for the very first "return" from kernel to user.

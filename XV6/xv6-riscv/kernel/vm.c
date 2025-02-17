@@ -156,6 +156,7 @@ walkaddr(pagetable_t pagetable, uint64 va)
     return 0;
   if((*pte & PTE_U) == 0)
     return 0;
+
   pa = PTE2PA(*pte);
   return pa;
 }
@@ -223,8 +224,9 @@ uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
       panic("uvmunmap: walk");
     if((*pte & PTE_V) == 0)
       panic("uvmunmap: not mapped");
-    if(PTE_FLAGS(*pte) == PTE_V)    // se la entry ha solamente impostata il bit di flag allora è un nodo intermedio
+    if(PTE_FLAGS(*pte) == PTE_V)    // se la entry ha impostato solamente il bit di validità allora è un nodo intermedio?
       panic("uvmunmap: not a leaf");
+
     if(do_free){
       uint64 pa = PTE2PA(*pte);
       kfree((void*)pa);
@@ -259,7 +261,7 @@ uvmfirst(pagetable_t pagetable, uchar *src, uint sz)
   mem = kalloc();
   memset(mem, 0, PGSIZE);
   mappages(pagetable, 0, PGSIZE, (uint64)mem, PTE_W|PTE_R|PTE_X|PTE_U);
-  memmove(mem, src, sz);
+  memmove(mem, src, sz);  // kkoltraka: notare direct mapping
 }
 
 // Allocate PTEs and physical memory to grow process from oldsz to
@@ -392,8 +394,8 @@ uvmclear(pagetable_t pagetable, uint64 va)
 // Copy from kernel to user.
 // Copy len bytes from src to virtual address dstva in a given page table.
 // Return 0 on success, -1 on error.
-
 /*
+  kkoltraka:
   Il passaggio da kernel a user sta nel fatto che src è un puntatore a memoria del kernel
   che sta venendo copiato nella memoria descritta nella pagetable del user
 */
@@ -407,11 +409,13 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
     va0 = PGROUNDDOWN(dstva);
     if(va0 >= MAXVA)
       return -1;
+
     pte = walk(pagetable, va0, 0);
     if(pte == 0 || (*pte & PTE_V) == 0 || (*pte & PTE_U) == 0 ||
        (*pte & PTE_W) == 0)
       return -1;
-    pa0 = PTE2PA(*pte);
+
+    pa0 = PTE2PA(*pte); // direttamente accessibile dal kernel dato che è directly-mapped
     n = PGSIZE - (dstva - va0);
     if(n > len)
       n = len;
@@ -437,6 +441,7 @@ copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
     pa0 = walkaddr(pagetable, va0);
     if(pa0 == 0)
       return -1;
+
     n = PGSIZE - (srcva - va0);
     if(n > len)
       n = len;
@@ -464,20 +469,22 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
     pa0 = walkaddr(pagetable, va0);
     if(pa0 == 0)
       return -1;
+
     n = PGSIZE - (srcva - va0);
     if(n > max)
       n = max;
 
     /*
       KKoltraka
-      Da notare molto bene: in realtà, quelli che qua si stanno considerando come indirizzi fisici (pa0 e p)
-      sono comunque indirizzi virtuali mappati nella tabella delle pagine del kernel. Si possono lo stesso
-      pensare come indirizzi fisici dato che il kernel xv6 fa direct mapping.
+      Da notare molto bene: in realtà, quelli che qua si stanno considerando come indirizzi fisici (pa0 e p) recuperati
+      dalla page table dell'utente, sono comunque indirizzi virtuali mappati anche nella tabella delle pagine del kernel.
+      Si possono lo stesso pensare come indirizzi fisici dato che il kernel xv6 fa direct mapping.
 
-      Senza direct mapping avrebbe dovuto creare temporaneamente una nuova entry nella page table del kernel
-      con cui mappare l'indirizzo fisico recuperato con walkaddr. Se no, l'indirizzo fisico sarebbe stato considerando 
-      come virtuale dall'HW e sottoposto ad una traduzione automatica. Di conseguenza si sarebbe acceduto ad una locazione 
-      sbagliata della memoria fisica (in caso di entry presente), o nel migliore dei casi, si sarebbe ottenuta una page fault.  
+      Senza direct mapping si sarebbe dovuto creare temporaneamente una nuova entry nella page table del kernel
+      con cui mappare l'indirizzo fisico recuperato con walkaddr(). Se no, l'indirizzo fisico sarebbe stato considerando 
+      come virtuale dall'HW e sottoposto ad una traduzione automatica durante la dereferenziazione. Di conseguenza, si sarebbe
+      acceduto ad una locazione sbagliata della memoria fisica (in caso di entry presente), o nel migliore dei casi, si
+      sarebbe ottenuta una page fault.  
     */
     char *p = (char *) (pa0 + (srcva - va0));
     while(n > 0){
