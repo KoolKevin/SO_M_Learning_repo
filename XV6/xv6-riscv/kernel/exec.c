@@ -103,7 +103,7 @@ exec(char *path, char **argv)
       goto bad;
     ustack[argc] = sp;
   }
-  // null pointer alla fine dell'array che fa diventare la dimensione argc+1
+  // null pointer alla fine dell'array
   ustack[argc] = 0;
 
   // push the array of argv[] pointers.

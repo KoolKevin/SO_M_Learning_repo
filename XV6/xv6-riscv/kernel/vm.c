@@ -279,8 +279,7 @@ uvmalloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz, int xperm)
   for(a = oldsz; a < newsz; a += PGSIZE){
     mem = kalloc();
     if(mem == 0){
-      // dealloc NON superflua qua; la funzione deve "fare marcia indietro" e deallocare tutte le pagine allocate
-      // fino a quel momento nel caso non riesca ad allocare per intero lo spazio desiderato
+      // kkoltraka: marcia indietro
       uvmdealloc(pagetable, a, oldsz);  
       return 0;
     }
