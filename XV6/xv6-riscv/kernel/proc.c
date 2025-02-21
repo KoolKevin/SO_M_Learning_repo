@@ -481,6 +481,16 @@ scheduler(void)
         // before jumping back to us.
         p->state = RUNNING;
         c->proc = p;
+
+        /*
+          kkoltraka:
+          swtch() viene chiamato come una normale funzione C:
+          Quando una funzione viene chiamata, il compilatore genera un'istruzione call che:
+            - Salva il Program Counter (pc) nel registro ra (Return Address).
+            - Salta all’indirizzo della funzione swtch().
+          Questo significa che quando swtch() salva il registro ra, sta in realtà salvando il PC del punto successivo
+          all'ultima chiamata di swtch().
+        */
         swtch(&c->context, &p->context);
 
         // Process is done running for now.
