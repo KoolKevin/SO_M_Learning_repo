@@ -3,5 +3,8 @@
 
 int main() {
     printf("Hello world! Sono riuscito a compilare ed eseguire il mio primo programma dentro a xv6\n");
+
+    hello(); // la mia syscall
+     
     return 0;
 }

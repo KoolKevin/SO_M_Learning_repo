@@ -20,3 +20,5 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
+// kkoltraka numeri delle mie system call
+#define SYS_hello  22

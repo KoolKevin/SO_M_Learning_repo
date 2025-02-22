@@ -102,6 +102,13 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 
+//kkoltraka: una mia system call di provo
+uint64 sys_hello() {
+  printf("sono una system call, saluto da dentro il kernel\n");
+  return 0;
+}
+
+
 
 /*
   sintassi che non conoscevo, a quanto pare in C si può inizializzare un array 
@@ -131,6 +138,7 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_hello]   sys_hello   // aggiunto
 };
 
 void
