@@ -48,7 +48,7 @@ usertrap(void)
   struct proc *p = myproc();
   
   // save user program counter.
-  p->trapframe->epc = r_sepc(); // kkoltraka: sepc popolato dall'hardware!
+  p->trapframe->epc = r_sepc();
   
   if(r_scause() == 8){
     // system call
@@ -99,7 +99,7 @@ usertrapret(void)
   // send syscalls, interrupts, and exceptions to uservec in trampoline.S
   /*
     TRAMPOLINE                        = indirizzo virtuale
-    trampoline                        = indirizzo fisico definito dal linker in trampoline.S
+    trampoline e uservec              = indirizzi fisici (direct mapping) 
     uservec-trampoline                = offset del codice handler all'interno del codice del trampolino
     TRAMPOLINE + (uservec-trampoline) = indirizzo virtuale effettivo dell'handler per le trap in userspace
   */
