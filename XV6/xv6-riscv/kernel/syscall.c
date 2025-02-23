@@ -7,7 +7,7 @@
 #include "syscall.h"
 #include "defs.h"
 
-// Fetch the uint64 at addr from the current process.
+// Fetch the uint64 at addr from the current process (and put it in ip (integer pointer)).
 int
 fetchaddr(uint64 addr, uint64 *ip)
 {
@@ -19,7 +19,7 @@ fetchaddr(uint64 addr, uint64 *ip)
   return 0;
 }
 
-// Fetch the nul-terminated string at addr from the current process.
+// Fetch the nul-terminated string at addr from the current process (and put it in buf).
 // Returns length of string, not including nul, or -1 for error.
 int
 fetchstr(uint64 addr, char *buf, int max)
@@ -138,7 +138,7 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
-[SYS_hello]   sys_hello   // aggiunto
+[SYS_hello]   sys_hello   // aggiunto da me
 };
 
 void

@@ -13,7 +13,7 @@ kernelvec:
         # make room to save registers.
         addi sp, sp, -256
 
-        # save caller-saved registers.
+        # save CALLER-saved registers.
         sd ra, 0(sp)
         sd sp, 8(sp)
         sd gp, 16(sp)
