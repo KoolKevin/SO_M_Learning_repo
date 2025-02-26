@@ -175,6 +175,7 @@ clockintr()
   if(cpuid() == 0){
     acquire(&tickslock);
     ticks++;
+    // kkoltraka: wakes up any processes waiting in the sleep system call
     wakeup(&ticks);
     release(&tickslock);
   }
