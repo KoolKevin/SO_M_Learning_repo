@@ -531,6 +531,7 @@ sched(void)
     panic("sched interruptible");
 
   intena = mycpu()->intena;
+  // kkoltraka: mycpu()->context contiene il contesto dello scheduler per quella CPU.
   swtch(&p->context, &mycpu()->context);
   mycpu()->intena = intena;
 }

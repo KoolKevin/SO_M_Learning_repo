@@ -1,9 +1,5 @@
 The unit of isolation in xv6 (as in other Unix operating systems) is a process. 
 
-    The process abstraction prevents one process from wrecking or spying on another process’s memory, CPU, file descriptors, etc.
-
-It also prevents a process from wrecking the kernel itself, so that a process can’t subvert the kernel’s isolation mechanisms. The kernel must implement the process abstraction with care because a buggy or malicious application may trick the kernel or hardware into doing something bad (e.g., circumventing isolation).
-
 The mechanisms used by the kernel to implement processes include the __user/supervisor mode flag__, __address spaces__, and __time-slicing of threads__.
 
 To help enforce isolation, the process abstraction provides the illusion to a program that it has its __own private machine__. A process provides a program with what appears to be a private memory system, or __address space__, which other processes cannot read or write. A process also provides the
