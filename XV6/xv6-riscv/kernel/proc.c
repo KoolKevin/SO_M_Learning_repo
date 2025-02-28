@@ -524,10 +524,10 @@ sched(void)
   if(!holding(&p->lock))
     panic("sched p->lock");
   if(mycpu()->noff != 1)
-    panic("sched locks");
+    panic("sched locks diversi da p->lock impegnati");
   if(p->state == RUNNING)
     panic("sched running");
-  if(intr_get())
+  if(intr_get())  // kkoltraka:  since a lock is held, interrupts should be disabled
     panic("sched interruptible");
 
   intena = mycpu()->intena;
