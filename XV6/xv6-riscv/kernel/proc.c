@@ -533,6 +533,7 @@ sched(void)
   intena = mycpu()->intena;
   // kkoltraka: mycpu()->context contiene il contesto dello scheduler per quella CPU.
   swtch(&p->context, &mycpu()->context);
+  // kkoltraka: riprendo da qui solo dopo esser stato rischedulato
   mycpu()->intena = intena;
 }
 
@@ -544,6 +545,7 @@ yield(void)
   acquire(&p->lock);
   p->state = RUNNABLE;
   sched();
+  // riprendo da qui solo dopo esser stato rischedulato
   release(&p->lock);
 }
 
