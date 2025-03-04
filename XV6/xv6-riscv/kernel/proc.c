@@ -415,6 +415,7 @@ wait(uint64 addr)
         if(pp->state == ZOMBIE){
           // Found one.
           pid = pp->pid;
+          // modifico la memoria dell'user con lo stato di uscita del figlio
           if(addr != 0 && copyout(p->pagetable, addr, (char *)&pp->xstate,
                                   sizeof(pp->xstate)) < 0) {
             release(&pp->lock);
@@ -437,7 +438,9 @@ wait(uint64 addr)
     }
     
     // Wait for a child to exit.
-    sleep(p, &wait_lock);  //DOC: wait-sleep
+    // kkoltraka: se sono qua il wait_lock è impegnato, altrimenti, 
+    // un wakeup su un altro core o di cambio di contesto potrebbe essere perso
+    sleep(p, &wait_lock);  
   }
 }
 
@@ -575,6 +578,15 @@ forkret(void)
 
 // Atomically release lock and sleep on chan.
 // Reacquires lock when awakened.
+//
+// kkoltraka:
+// sleep(chan) waits for an event designated by the value of chan (wait channel)
+// sleep riceve anche il "condition lock", ovvero un lock che viene impegnato 
+// PRIMA DI CONTROLLARE LA CONDIZIONE DI SOSPENSIONE evitando in questo modo il
+// LOST WAKEUP PROBLEM. sleep rilascia questo lock prima di invocare lo scheduler
+// in modo da non causare deadlock   
+//
+// Il canale serve solo a marchiare che processi risvegliare
 void
 sleep(void *chan, struct spinlock *lk)
 {
@@ -593,7 +605,9 @@ sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   p->chan = chan;
   p->state = SLEEPING;
-
+  // kkoltraka: p->lock verrà rilasciato solo in scheduler() 
+  // una volta che il processo sarà effettivamente stato sospeso
+  // mediante cambio di contesto (e quindi modifica del suo campo p->context)
   sched();
 
   // Tidy up.
@@ -606,6 +620,11 @@ sleep(void *chan, struct spinlock *lk)
 
 // Wake up all processes sleeping on chan.
 // Must be called without any p->lock.
+// 
+// KKoltraka: deve essere chiamata anche con il codition lock già impegnato
+// altrimenti un processo nel mezzo dell'addormentarsi non impedirebbe l'esecuzione
+// di una wakeup che a questo punto perderebbe in quando non ancora marchiato come 
+// 'SLEEPING' e sostituiro da un cambio di contesto
 void
 wakeup(void *chan)
 {
