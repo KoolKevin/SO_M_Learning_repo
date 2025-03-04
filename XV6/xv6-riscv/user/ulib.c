@@ -3,9 +3,11 @@
 #include "kernel/fcntl.h"
 #include "user/user.h"
 
-//
+
 // wrapper so that it's OK if main() does not call exit().
 //
+// kkoltraka: ogni programma utente viene compilato linkando
+// ulib.c e quindi hanno dentro start() 
 void
 start()
 {
