@@ -102,12 +102,28 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 
-//kkoltraka: una mia system call di provo
+//kkoltraka le mie system call
 uint64 sys_hello() {
   printf("sono una system call, saluto da dentro il kernel\n");
   return 0;
 }
 
+uint64 sys_interrupt_on() {
+  intr_on();
+  printf("------ INTERRUPT ABILITATI! ------\n");
+  return 0;
+}
+
+uint64 sys_interrupt_off() {
+  intr_off();
+  printf("------ INTERRUPT DISABILITATI----\n");
+  return 0;
+}
+
+uint64 sys_procdump() {
+  procdump();
+  return 0;
+}
 
 
 /*
@@ -138,7 +154,11 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
-[SYS_hello]   sys_hello   // aggiunto da me
+// aggiunte da me
+[SYS_hello]   sys_hello,
+[SYS_interrupt_on] sys_interrupt_on,
+[SYS_interrupt_off] sys_interrupt_off,
+[SYS_procdump] sys_procdump,   
 };
 
 void

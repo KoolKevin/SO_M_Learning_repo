@@ -734,7 +734,6 @@ exectest(char *s)
 }
 
 // simple fork and pipe read/write
-
 void
 pipe1(char *s)
 {

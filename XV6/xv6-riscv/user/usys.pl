@@ -36,4 +36,8 @@ entry("getpid");
 entry("sbrk");
 entry("sleep");
 entry("uptime");
-entry("hello");     # aggiunto
+# aggiunte
+entry("hello");  
+entry("interrupt_on");  
+entry("interrupt_off");  
+entry("procdump");    

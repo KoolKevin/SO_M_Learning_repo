@@ -22,7 +22,11 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-int hello(void);    // aggiunto
+// aggiunte da me
+int hello(void); 
+int interrupt_on(void);
+int interrupt_off(void);
+int procdump(void);       
 
 // ulib.c
 int stat(const char*, struct stat*);

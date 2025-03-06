@@ -5,6 +5,12 @@ int main() {
     printf("Hello world! Sono riuscito a compilare ed eseguire il mio primo programma dentro a xv6\n");
 
     hello(); // la mia syscall
-     
+
+    interrupt_on();
+    if(fork() != 0) {
+        procdump();
+        interrupt_off();
+    }
+
     return 0;
 }
