@@ -67,7 +67,43 @@ usertrap(void)
     syscall();
   } else if((which_dev = devintr()) != 0){
     // ok
-  } else {
+  }
+  /* kkoltraka: aggiunto da me */
+  else if(r_scause() == 15) { // store page fault (fork_cow) 
+    pte_t *pte;
+    uint64 old_page_pa;
+    char* new_page_pa;
+    uint64 faulty_va = PGROUNDDOWN(r_stval());
+    uint flags;
+
+    printf("gestisco una store page fault per (pid=%d; stval=%lx)\n", p->pid, faulty_va);
+
+    if((pte = walk(p->pagetable, faulty_va, 0)) == 0)
+      panic("usertrap::store page fault: pte should exist");
+    if((*pte & PTE_V) == 0)
+      panic("usertrap::store page fault: page not present");
+
+    // recupero indirizzo fisico e flags dal PTE
+    old_page_pa = PTE2PA(*pte);
+    
+    // alloco la pagina di copia e aggiorno il vecchio   
+    // mapping che puntava alla pagina condivisa
+    if((new_page_pa = kalloc()) == 0) {
+      printf("usertrap::store page fault: non ho abbastanza memoria per allocare una nuova pagina");
+      setkilled(p);
+    }
+    memmove(new_page_pa, (char*)old_page_pa, PGSIZE);
+    flags = PTE_FLAGS(*pte) | PTE_W; // ora posso scrivere!
+    if(remappages(p->pagetable, faulty_va, PGSIZE, (uint64)new_page_pa, flags) != 0){
+      printf("usertrap::store page fault: questo non dovrebbe succedere mai dato che sto aggiornando solo un PTE");
+      kfree(new_page_pa);
+      setkilled(p);
+    }
+
+    coredump(p->pagetable, p->sz);
+    // devo controllare se ho solo un riferimento alla relativa pagina fisica
+  }
+  else {
     printf("usertrap(): unexpected scause 0x%lx pid=%d\n", r_scause(), p->pid);
     printf("            sepc=0x%lx stval=0x%lx\n", r_sepc(), r_stval());
     setkilled(p);

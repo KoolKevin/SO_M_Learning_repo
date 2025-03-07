@@ -6,7 +6,7 @@
 #include "proc.h"
 #include "defs.h"
 
-#define DEBUG 1
+// #define DEBUG 1
 
 struct cpu cpus[NCPU];
 
@@ -382,9 +382,6 @@ int fork_cow(void) {
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
-  #ifdef DEBUG
-  printf("\tepc padre: %lx; epc figlio: %lx\n\n", p->trapframe->epc, np->trapframe->epc);
-  #endif
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;
 
