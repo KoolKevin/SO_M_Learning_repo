@@ -107,33 +107,26 @@ kfree(void *pa)
   */
   r = (struct run*)pa;
 
-  int found = 0;
-  int i=0;
+  int index = ((uint64)pa - PGROUNDUP((uint64)end)) / PGSIZE;
   acquire(&kmem.lock);
   // decremento i riferimenti della pagina (se non sto venendo chiamato da kinit())
   if(!inizializzazione) {
-    while(i < page_ref_table.dim && !found) {
-      if(page_ref_table.page_refs[i].pa == (uint64)pa) {
-        found = 1;
-        page_ref_table.page_refs[i].count--;
+      if(page_ref_table.page_refs[index].pa == (uint64)pa) {
+        page_ref_table.page_refs[index].count--;
         #ifdef DEBUG
-        printf("decremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[i].count, (uint64)pa);
+        printf("decremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[index].count, (uint64)pa);
         #endif
 
         // se la pagina non è più riferita, la posso liberare    
-        if(page_ref_table.page_refs[i].count == 0) {
+        if(page_ref_table.page_refs[index].count == 0) {
           r->next = kmem.freelist;
           kmem.freelist = r;
         }
       }
-
-      i++;
-    }
-
-    if(!found) {
-      printf("kfree: nella tabella dei riferimenti alle pagine non ho trovato pa=0x%lx\n", (uint64)pa);
-      panic("panico");
-    }
+      else {
+        printf("non ho trovato pa=0x%lx nel posto in cui mi aspettavo nella tabella\n", (uint64)pa);
+        panic("panico");
+      }
   } else {
     r->next = kmem.freelist;
     kmem.freelist = r;
@@ -152,27 +145,19 @@ kalloc(void)
 
   acquire(&kmem.lock);
   // incremento i riferimenti alla pagina
-  int found = 0;
-  int i=page_ref_table.dim-1; // nell'allocazione ha senso cercare dal fondo
-
-  while(i < page_ref_table.dim && !found) {
-    if(page_ref_table.page_refs[i].pa == (uint64)kmem.freelist) {
-      found = 1;
-      page_ref_table.page_refs[i].count++;
-      #ifdef DEBUG
-      printf("incremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[i].count, (uint64)kmem.freelist);
-      #endif
-      if(page_ref_table.page_refs[i].count != 1) {
-        printf("kalloc: pagina appena allocata con più di un riferimento?!\n");
-        panic("panico");
-      }
+  int index = ((uint64)kmem.freelist - PGROUNDUP((uint64)end)) / PGSIZE;
+  
+  if(page_ref_table.page_refs[index].pa == (uint64)kmem.freelist) {
+    page_ref_table.page_refs[index].count++;
+    #ifdef DEBUG
+    printf("incremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[index].count, (uint64)kmem.freelist);
+    #endif
+    if(page_ref_table.page_refs[index].count != 1) {
+      printf("kalloc: pagina appena allocata con più di un riferimento?!\n");
+      panic("panico");
     }
-
-    i--;
-  }
-
-  if(!found) {
-    printf("kalloc: nella tabella dei riferimenti alle pagine non ho trovato pa=0x%lx\n", (uint64)kmem.freelist);
+  } else {
+    printf("non ho trovato pa=0x%lx nel posto in cui mi aspettavo nella tabella\n", (uint64)kmem.freelist);
     panic("panico");
   }
 
