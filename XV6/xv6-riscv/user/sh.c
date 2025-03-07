@@ -184,7 +184,8 @@ fork1(void)
 {
   int pid;
 
-  pid = fork();
+  pid = fork_cow();
+  // pid = fork();
   if(pid == -1)
     panic("fork");
   return pid;

@@ -125,6 +125,19 @@ uint64 sys_procdump() {
   return 0;
 }
 
+uint64 sys_fork_cow(void) {
+  printf("eseguito fork_cow()\n");
+  return fork_cow();
+}
+
+uint64 sys_coredump(void) {
+  struct proc *p = myproc();
+
+  printf("--- COREDUMP di %s, pid: %d ---\n", p->name, p->pid);
+  coredump(p->pagetable, p->sz);
+
+  return 0;
+}
 
 /*
   sintassi che non conoscevo, a quanto pare in C si può inizializzare un array 
@@ -158,7 +171,9 @@ static uint64 (*syscalls[])(void) = {
 [SYS_hello]   sys_hello,
 [SYS_interrupt_on] sys_interrupt_on,
 [SYS_interrupt_off] sys_interrupt_off,
-[SYS_procdump] sys_procdump,   
+[SYS_procdump] sys_procdump,
+[SYS_fork_cow] sys_fork_cow,
+[SYS_coredump] sys_coredump,
 };
 
 void

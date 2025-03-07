@@ -26,7 +26,9 @@ int uptime(void);
 int hello(void); 
 int interrupt_on(void);
 int interrupt_off(void);
-int procdump(void);       
+int procdump(void);
+int fork_cow(void);       
+int coredump(void);   
 
 // ulib.c
 int stat(const char*, struct stat*);

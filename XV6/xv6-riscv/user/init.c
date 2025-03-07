@@ -41,7 +41,7 @@ main(void)
       // or if a parentless process exits.
       wpid = wait((int *) 0); //kkoltrka: non mi interessa lo stato di ritorno
       if(wpid == pid){
-        // the shell exited; restart it.
+        printf("init: the shell exited; restart it\n");
         break;
       } else if(wpid < 0){
         printf("init: wait returned an error\n");

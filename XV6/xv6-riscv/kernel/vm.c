@@ -397,9 +397,9 @@ int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
   for(i = 0; i < sz; i += PGSIZE){
     // recupero il PTE corrente dalla tabella del padre
     if((pte = walk(old, i, 0)) == 0)
-      panic("uvmcopy: pte should exist");
+      panic("uvmshare: pte should exist");
     if((*pte & PTE_V) == 0)
-      panic("uvmcopy: page not present");
+      panic("uvmshare: page not present");
 
     // resetto il flag di write nella tabella del padre 
     *pte &= ~PTE_W;
@@ -419,6 +419,37 @@ int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
   return 0;
 }
 
+void coredump(pagetable_t table, uint64 sz) {
+  pte_t *pte;
+  uint64 pa, va;
+  uint flags;
+
+  for(va = 0; va < sz; va += PGSIZE){
+    // recupero il PTE corrente dalla tabella del padre
+    if((pte = walk(table, va, 0)) == 0)
+      panic("coredump: pte should exist");
+    if((*pte & PTE_V) == 0)
+      panic("coredump: page not present");
+
+    // recupero indirizzo fisico e flags dal PTE
+    pa = PTE2PA(*pte);
+    flags = PTE_FLAGS(*pte);
+    
+    printf("va: %lx -> pa: %lx\t", va, pa);
+    if(flags & PTE_V)
+      printf("V|");
+    if(flags & PTE_R)
+      printf("R|");
+    if(flags & PTE_W)
+      printf("W|");
+    if(flags & PTE_X)
+      printf("X|");
+    if(flags & PTE_U)
+      printf("U");
+    
+    printf("\n");
+  }
+}
 
 
 

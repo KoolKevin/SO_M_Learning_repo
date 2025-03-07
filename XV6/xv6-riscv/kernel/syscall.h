@@ -25,3 +25,5 @@
 #define SYS_interrupt_on   23
 #define SYS_interrupt_off  24
 #define SYS_procdump  25
+#define SYS_fork_cow  26
+#define SYS_coredump  27

@@ -37,7 +37,9 @@ entry("sbrk");
 entry("sleep");
 entry("uptime");
 # aggiunte
-entry("hello");  
-entry("interrupt_on");  
-entry("interrupt_off");  
-entry("procdump");    
+entry("hello");
+entry("interrupt_on");
+entry("interrupt_off");
+entry("procdump");
+entry("fork_cow");
+entry("coredump");

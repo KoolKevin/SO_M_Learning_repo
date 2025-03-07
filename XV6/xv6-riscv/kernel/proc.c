@@ -6,6 +6,8 @@
 #include "proc.h"
 #include "defs.h"
 
+#define DEBUG 1
+
 struct cpu cpus[NCPU];
 
 struct proc proc[NPROC];
@@ -352,6 +354,15 @@ int fork_cow(void) {
     return -1;
   }
 
+  #ifdef DEBUG
+  printf("Coredump del processo padre PRIMA DI FORK_COW:\n");
+  coredump(p->pagetable, p->sz);
+  printf("\n");
+  printf("Coredump del processo figlio PRIMA DI FORK_COW:\n");
+  coredump(np->pagetable, np->sz);
+  printf("\n");
+  #endif
+
   // Rimappo la memoria del padre nella tabella del figlio e imposto tutto read-only
   if(uvmshare(p->pagetable, np->pagetable, p->sz) < 0){
     freeproc(np);
@@ -360,8 +371,20 @@ int fork_cow(void) {
   }
   np->sz = p->sz;
 
+  #ifdef DEBUG
+  printf("Coredump del processo padre DOPO DI FORK_COW:\n");
+  coredump(p->pagetable, p->sz);
+  printf("\n");
+  printf("Coredump del processo figlio DOPO DI FORK_COW:\n");
+  coredump(np->pagetable, np->sz);
+  printf("\n");
+  #endif
+
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
+  #ifdef DEBUG
+  printf("\tepc padre: %lx; epc figlio: %lx\n\n", p->trapframe->epc, np->trapframe->epc);
+  #endif
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;
 
