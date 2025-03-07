@@ -69,7 +69,7 @@ usertrap(void)
     // ok
   }
   /* kkoltraka: aggiunto da me */
-  else if(r_scause() == 0xf || r_scause() == 0xc) { // store page fault (fork_cow) 
+  else if(r_scause() == 0xf) { // 0xf == store page fault (fork_cow) 
     pte_t *pte;
     uint64 page_pa;
     char* new_page_pa;
