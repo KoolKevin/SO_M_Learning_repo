@@ -161,7 +161,7 @@ void            kvminit(void);
 void            kvminithart(void);
 void            kvmmap(pagetable_t, uint64, uint64, uint64, int);
 int             mappages(pagetable_t, uint64, uint64, uint64, int);
-int             remappages(pagetable_t, uint64, uint64, uint64, int); // aggiunto da me
+int             remap_page(pagetable_t, uint64, uint64, int); // aggiunto da me
 pagetable_t     uvmcreate(void);
 void            uvmfirst(pagetable_t, uchar *, uint);
 uint64          uvmalloc(pagetable_t, uint64, uint64, int);

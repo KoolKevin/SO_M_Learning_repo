@@ -142,6 +142,7 @@ UPROGS=\
 	$U/_grind\
 	$U/_wc\
 	$U/_zombie\
+	$U/_test_fork_cow\
 	$U/_my_hello 	# aggiunto
 
 fs.img: mkfs/mkfs README $(UPROGS)

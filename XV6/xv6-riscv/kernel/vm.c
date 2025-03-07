@@ -219,17 +219,16 @@ remappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
 
   if((va % PGSIZE) != 0)
     panic("mappages: va not aligned");
-
   if((size % PGSIZE) != 0)
     panic("mappages: size not aligned");
-
   if(size == 0)
     panic("mappages: size");
   
   a = va;
   last = va + size - PGSIZE;
   for(;;){
-    if((pte = walk(pagetable, a, 1)) == 0)
+    printf("\trimappo va: %lx in pa: %lx\n", a, pa);
+    if((pte = walk(pagetable, a, 0)) == 0)
       return -1;
     // if(*pte & PTE_V)
     //   panic("mappages: remap");
@@ -429,18 +428,26 @@ int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
   uint64 pa, i;
   uint flags;
 
-  for(i = 0; i < sz; i += PGSIZE){
+  for(i = 0; i < sz; i += PGSIZE) {
     // recupero il PTE corrente dalla tabella del padre
     if((pte = walk(old, i, 0)) == 0)
       panic("uvmshare: pte should exist");
     if((*pte & PTE_V) == 0)
       panic("uvmshare: page not present");
 
+    printf("copio %lx\n", i);
     // resetto il flag di write nella tabella del padre 
     *pte &= ~PTE_W;
     // recupero indirizzo fisico e flags dal PTE
     pa = PTE2PA(*pte);
     flags = PTE_FLAGS(*pte);
+
+    // printf("\t\tuvmshare - flags:\n");
+    // printf("\t\t\tv: %ld\n", flags & PTE_V);
+    // printf("\t\t\tr: %ld\n", flags & PTE_R);
+    // printf("\t\t\tw: %ld\n", flags & PTE_W);
+    // printf("\t\t\tx: %ld\n", flags & PTE_X);
+    // printf("\t\t\tu: %ld\n", flags & PTE_U);
     
     // rimappo la memoria del padre nella tabella del figlio (con i flag corretti)
     if(mappages(new, i, PGSIZE, (uint64)pa, flags) != 0){
@@ -470,7 +477,7 @@ void coredump(pagetable_t table, uint64 sz) {
     pa = PTE2PA(*pte);
     flags = PTE_FLAGS(*pte);
     
-    printf("va: %lx -> pa: %lx\t", va, pa);
+    printf("\tva: %lx -> pa: %lx\t", va, pa);
     if(flags & PTE_V)
       printf("V|");
     if(flags & PTE_R)

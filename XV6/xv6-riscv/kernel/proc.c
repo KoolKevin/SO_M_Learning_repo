@@ -823,5 +823,7 @@ procdump(void)
       state = "???";
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
+
+    coredump(p->pagetable, p->sz);
   }
 }
