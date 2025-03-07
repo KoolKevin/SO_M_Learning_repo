@@ -377,6 +377,61 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
   return -1;
 }
 
+
+
+
+/* ------------ kkoltraka: roba scritta da me ----------- */
+
+
+
+// date le tabelle delle pagine di un processo padre e di un processo figlio, 
+// questa funzione aggiunge nella tabella del figlio tutti i mapping necessari
+// per riferire la memoria del padre. Inoltre, siccome ora la memoria è condivisa
+// da due processi, viene resettato PTE_W in tutti i PTE di entrambe le tabelle.
+// (questa funzione viene usata da fork_cow)
+int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
+  pte_t *pte;
+  uint64 pa, i;
+  uint flags;
+
+  for(i = 0; i < sz; i += PGSIZE){
+    // recupero il PTE corrente dalla tabella del padre
+    if((pte = walk(old, i, 0)) == 0)
+      panic("uvmcopy: pte should exist");
+    if((*pte & PTE_V) == 0)
+      panic("uvmcopy: page not present");
+
+    // resetto il flag di write nella tabella del padre 
+    *pte &= ~PTE_W;
+    // recupero indirizzo fisico e flags dal PTE
+    pa = PTE2PA(*pte);
+    flags = PTE_FLAGS(*pte);
+    
+    // rimappo la memoria del padre nella tabella del figlio (con i flag corretti)
+    if(mappages(new, i, PGSIZE, (uint64)pa, flags) != 0){
+      // non ho abbastanza memoria per tutte le pagine della tabella,
+      // faccio marcia indietro
+      uvmunmap(new, 0, i/PGSIZE, 1);  
+      return -1;
+    }
+  }
+
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // mark a PTE invalid for user access.
 // used by exec for the user stack guard page.
 void
