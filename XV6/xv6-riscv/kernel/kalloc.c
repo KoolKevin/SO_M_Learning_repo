@@ -9,6 +9,8 @@
 #include "riscv.h"
 #include "defs.h"
 
+#define DEBUG 1
+
 void freerange(void *pa_start, void *pa_end);
 
 extern char end[]; // first address after kernel.
@@ -38,6 +40,8 @@ struct page_ref_table_t {
 struct page_ref_table_t page_ref_table;
 
 void page_ref_table_init() {
+  page_ref_table.dim=0;
+
   char *p = (char*)PGROUNDUP((uint64)end);
   
   for(; p + PGSIZE <= (char*)PHYSTOP; p += PGSIZE) {
@@ -55,7 +59,7 @@ kinit()
 {
   inizializzazione = 1;
   initlock(&kmem.lock, "kmem");
-  page_ref_table.dim=0;
+  page_ref_table_init(); // inizializzo anche questo
   freerange(end, (void*)PHYSTOP);
   inizializzazione = 0;
 }
@@ -112,7 +116,9 @@ kfree(void *pa)
       if(page_ref_table.page_refs[i].pa == (uint64)pa) {
         found = 1;
         page_ref_table.page_refs[i].count--;
+        #ifdef DEBUG
         printf("decremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[i].count, (uint64)pa);
+        #endif
 
         // se la pagina non è più riferita, la posso liberare    
         if(page_ref_table.page_refs[i].count == 0) {
@@ -147,20 +153,22 @@ kalloc(void)
   acquire(&kmem.lock);
   // incremento i riferimenti alla pagina
   int found = 0;
-  int i=page_ref_table.dim-1; // nell'allocazione ha senso partire dal fondo
-  printf("ultimo elemento nella tabella: 0x%lx\n", (uint64)page_ref_table.page_refs[i].pa);
+  int i=page_ref_table.dim-1; // nell'allocazione ha senso cercare dal fondo
+
   while(i < page_ref_table.dim && !found) {
     if(page_ref_table.page_refs[i].pa == (uint64)kmem.freelist) {
       found = 1;
       page_ref_table.page_refs[i].count++;
+      #ifdef DEBUG
       printf("incremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[i].count, (uint64)kmem.freelist);
+      #endif
       if(page_ref_table.page_refs[i].count != 1) {
         printf("kalloc: pagina appena allocata con più di un riferimento?!\n");
         panic("panico");
       }
     }
 
-    i++;
+    i--;
   }
 
   if(!found) {
