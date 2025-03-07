@@ -69,9 +69,9 @@ usertrap(void)
     // ok
   }
   /* kkoltraka: aggiunto da me */
-  else if(r_scause() == 15) { // store page fault (fork_cow) 
+  else if(r_scause() == 0xf || r_scause() == 0xc) { // store page fault (fork_cow) 
     pte_t *pte;
-    uint64 old_page_pa;
+    uint64 page_pa;
     char* new_page_pa;
     uint64 faulty_va = PGROUNDDOWN(r_stval());
     uint flags;
@@ -83,19 +83,31 @@ usertrap(void)
       panic("usertrap::store page fault: page not present");
 
     // recupero indirizzo fisico e flags dal PTE
-    old_page_pa = PTE2PA(*pte);
-    
+    page_pa = PTE2PA(*pte);
+    flags = PTE_FLAGS(*pte) | PTE_W; // ora posso scrivere!
+    // recupero il numero di processi che stanno riferendo questa pagina
+    int refs = get_physical_page_refs(page_pa);
+
     // alloco la pagina di copia e aggiorno il vecchio   
     // mapping che puntava alla pagina condivisa
-    if((new_page_pa = kalloc()) == 0) {
-      printf("usertrap::store page fault: non ho abbastanza memoria per allocare una nuova pagina");
-      setkilled(p);
+    if(refs > 1) {
+      if((new_page_pa = kalloc()) == 0) {
+        printf("usertrap::store page fault: non ho abbastanza memoria per allocare una nuova pagina");
+        setkilled(p);
+      }
+      memmove(new_page_pa, (char*)page_pa, PGSIZE);
+      
+      decrease_physical_page_refs(page_pa);
+      printf("\tdecremento a %d il numero di riferimenti a pa=0x%lx\n", get_physical_page_refs((uint64)page_pa), (uint64)page_pa);
+      uvmunmap(p->pagetable, faulty_va, 1, 0); // non c'è bisogno di controllo di errore
+      mappages(p->pagetable, faulty_va, PGSIZE, (uint64)new_page_pa, flags);
     }
-    memmove(new_page_pa, (char*)old_page_pa, PGSIZE);
-    flags = PTE_FLAGS(*pte) | PTE_W; // ora posso scrivere!
-
-    uvmunmap(p->pagetable, faulty_va, 1, 0); // non c'è bisogno di controllo di errore
-    mappages(p->pagetable, faulty_va, PGSIZE, (uint64)new_page_pa, flags);
+    // se ho solo un riferimento mi basta aggiornare il PTE
+    else {
+      uvmunmap(p->pagetable, faulty_va, 1, 0); 
+      mappages(p->pagetable, faulty_va, PGSIZE, (uint64)page_pa, flags);
+    }
+    
     
     // if(remap_page(p->pagetable, faulty_va, (uint64)new_page_pa, flags) != 0){
     //   printf("usertrap::store page fault: questo non dovrebbe succedere mai dato che sto aggiornando solo un PTE");
@@ -103,8 +115,7 @@ usertrap(void)
     //   setkilled(p);
     // }
 
-    coredump(p->pagetable, p->sz);
-    // // devo controllare se ho solo un riferimento alla relativa pagina fisica
+    procdump();
   }
   else {
     printf("usertrap(): unexpected scause 0x%lx pid=%d\n", r_scause(), p->pid);

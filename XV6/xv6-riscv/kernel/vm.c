@@ -435,20 +435,12 @@ int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
     if((*pte & PTE_V) == 0)
       panic("uvmshare: page not present");
 
-    printf("copio %lx\n", i);
+    printf("\tcondivido: 0x%lx e rendo read-only\n", i);
     // resetto il flag di write nella tabella del padre 
     *pte &= ~PTE_W;
     // recupero indirizzo fisico e flags dal PTE
     pa = PTE2PA(*pte);
     flags = PTE_FLAGS(*pte);
-
-    // printf("\t\tuvmshare - flags:\n");
-    // printf("\t\t\tv: %ld\n", flags & PTE_V);
-    // printf("\t\t\tr: %ld\n", flags & PTE_R);
-    // printf("\t\t\tw: %ld\n", flags & PTE_W);
-    // printf("\t\t\tx: %ld\n", flags & PTE_X);
-    // printf("\t\t\tu: %ld\n", flags & PTE_U);
-    
     // rimappo la memoria del padre nella tabella del figlio (con i flag corretti)
     if(mappages(new, i, PGSIZE, (uint64)pa, flags) != 0){
       // non ho abbastanza memoria per tutte le pagine della tabella,
@@ -456,6 +448,8 @@ int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
       uvmunmap(new, 0, i/PGSIZE, 1);  
       return -1;
     }
+    increase_physical_page_refs((uint64)pa);
+    printf("\tincremento a %d il numero di riferimenti a pa=0x%lx\n", get_physical_page_refs((uint64)pa), (uint64)pa);
   }
 
   return 0;
@@ -477,7 +471,7 @@ void coredump(pagetable_t table, uint64 sz) {
     pa = PTE2PA(*pte);
     flags = PTE_FLAGS(*pte);
     
-    printf("\tva: %lx -> pa: %lx\t", va, pa);
+    printf("\tva: 0x%lx -> pa: 0x%lx\t", va, pa);
     if(flags & PTE_V)
       printf("V|");
     if(flags & PTE_R)
@@ -488,6 +482,9 @@ void coredump(pagetable_t table, uint64 sz) {
       printf("X|");
     if(flags & PTE_U)
       printf("U");
+
+    int refs = get_physical_page_refs(pa);
+    printf("\trefs = %d\n", refs);
     
     printf("\n");
   }

@@ -9,7 +9,7 @@
 #include "riscv.h"
 #include "defs.h"
 
-#define DEBUG 1
+// #define DEBUG 1
 
 void freerange(void *pa_start, void *pa_end);
 
@@ -24,6 +24,10 @@ struct {
   struct spinlock lock;
   struct run *freelist;
 } kmem;
+
+
+
+
 
 // tipi aggiunti per tenere traccia di quanti riferimenti
 // attivi ho ad una determinata pagina fisica (fork_cow())
@@ -51,7 +55,44 @@ void page_ref_table_init() {
   }
 }
 
-// bruttura per non 
+int get_physical_page_refs(uint64 pa) {
+  pa = PGROUNDDOWN(pa);
+  int index = (pa - PGROUNDUP((uint64)end)) / PGSIZE;
+
+  return page_ref_table.page_refs[index].count;
+}
+
+void increase_physical_page_refs(uint64 pa) {
+  #ifdef DEBUG
+  printf("incremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[index].count, (uint64)kmem.freelist);
+  #endif
+
+  pa = PGROUNDDOWN(pa);
+  int index = (pa - PGROUNDUP((uint64)end)) / PGSIZE;
+
+  page_ref_table.page_refs[index].count++;
+}
+
+void decrease_physical_page_refs(uint64 pa) {
+  #ifdef DEBUG
+  printf("decremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[index].count, (uint64)pa);
+  #endif
+
+  pa = PGROUNDDOWN(pa);
+  int index = (pa - PGROUNDUP((uint64)end)) / PGSIZE;
+
+  page_ref_table.page_refs[index].count--;
+}
+
+
+
+
+
+
+
+
+
+// bruttura per non dover fare troppi refactoring 
 int inizializzazione;
 
 void
@@ -111,23 +152,22 @@ kfree(void *pa)
   acquire(&kmem.lock);
   // decremento i riferimenti della pagina (se non sto venendo chiamato da kinit())
   if(!inizializzazione) {
-      if(page_ref_table.page_refs[index].pa == (uint64)pa) {
-        page_ref_table.page_refs[index].count--;
-        #ifdef DEBUG
-        printf("decremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[index].count, (uint64)pa);
-        #endif
-
-        // se la pagina non è più riferita, la posso liberare    
-        if(page_ref_table.page_refs[index].count == 0) {
-          r->next = kmem.freelist;
-          kmem.freelist = r;
-        }
+    if(page_ref_table.page_refs[index].pa == (uint64)pa) {
+      decrease_physical_page_refs((uint64)pa);
+      
+      // se la pagina non è più riferita, la posso liberare    
+      if(get_physical_page_refs((uint64)pa) == 0) {
+        r->next = kmem.freelist;
+        kmem.freelist = r;
       }
-      else {
-        printf("non ho trovato pa=0x%lx nel posto in cui mi aspettavo nella tabella\n", (uint64)pa);
-        panic("panico");
-      }
-  } else {
+    }
+    else {
+      printf("non ho trovato pa=0x%lx nel posto in cui mi aspettavo nella tabella\n", (uint64)pa);
+      panic("panico");
+    }
+  }
+  // se provengo da kinit() devo solo costruire la lista delle pagine libere 
+  else {
     r->next = kmem.freelist;
     kmem.freelist = r;
   }
@@ -148,11 +188,9 @@ kalloc(void)
   int index = ((uint64)kmem.freelist - PGROUNDUP((uint64)end)) / PGSIZE;
   
   if(page_ref_table.page_refs[index].pa == (uint64)kmem.freelist) {
-    page_ref_table.page_refs[index].count++;
-    #ifdef DEBUG
-    printf("incremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[index].count, (uint64)kmem.freelist);
-    #endif
-    if(page_ref_table.page_refs[index].count != 1) {
+    increase_physical_page_refs((uint64)kmem.freelist);
+    
+    if(get_physical_page_refs((uint64)kmem.freelist) != 1) {
       printf("kalloc: pagina appena allocata con più di un riferimento?!\n");
       panic("panico");
     }
