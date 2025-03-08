@@ -497,16 +497,18 @@ wait(uint64 addr)
         if(pp->state == ZOMBIE){
           // Found one.
           pid = pp->pid;
-          // modifico la memoria dell'user con lo stato di uscita del figlio
+          // modifico la memoria dell'user con lo stato di uscita del figlio (se non si è passato null)
+          // ATTENZIONE: devo aggiustare copyout per tener conto delle pagine della fork_cow()!!!
           if(addr != 0 && copyout(p->pagetable, addr, (char *)&pp->xstate,
                                   sizeof(pp->xstate)) < 0) {
             release(&pp->lock);
             release(&wait_lock);
             return -1;
           }
-          freeproc(pp);
+          freeproc(pp); 
           release(&pp->lock);
           release(&wait_lock);
+
           return pid;
         }
         release(&pp->lock);
@@ -813,6 +815,7 @@ procdump(void)
   struct proc *p;
   char *state;
 
+  acquire(&wait_lock);
   printf("\n\n-------- DUMP DEI PROCESSI --------\n\n");
   for(p = proc; p < &proc[NPROC]; p++){
     if(p->state == UNUSED)
@@ -826,4 +829,5 @@ procdump(void)
 
     coredump(p->pagetable, p->sz);
   }
+  release(&wait_lock);
 }

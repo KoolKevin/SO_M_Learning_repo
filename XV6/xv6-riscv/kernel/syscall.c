@@ -127,7 +127,10 @@ uint64 sys_procdump() {
 
 uint64 sys_fork_cow(void) {
   printf("eseguito fork_cow()\n");
-  return fork_cow();
+  uint64 pid = fork_cow();
+  printf("dump dopo fork_cow()\n");
+  procdump();
+  return pid;
 }
 
 uint64 sys_coredump(void) {

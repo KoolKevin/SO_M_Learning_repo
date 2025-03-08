@@ -436,8 +436,11 @@ int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
       panic("uvmshare: page not present");
 
     printf("\tcondivido: 0x%lx e rendo read-only\n", i);
-    // resetto il flag di write nella tabella del padre 
-    *pte &= ~PTE_W;
+    // sostituisco i flag PTE_W con PTE_COW 
+    if (*pte & PTE_W) {
+        *pte &= ~PTE_W;  
+        *pte |= PTE_COW; 
+    }
     // recupero indirizzo fisico e flags dal PTE
     pa = PTE2PA(*pte);
     flags = PTE_FLAGS(*pte);
@@ -480,6 +483,8 @@ void coredump(pagetable_t table, uint64 sz) {
       printf("W|");
     if(flags & PTE_X)
       printf("X|");
+    if(flags & PTE_COW)
+      printf("COW|");
     if(flags & PTE_U)
       printf("U");
 
@@ -522,6 +527,9 @@ uvmclear(pagetable_t pagetable, uint64 va)
   kkoltraka:
   Il passaggio da kernel a user sta nel fatto che src è un puntatore a memoria del kernel
   che sta venendo copiato nella memoria descritta nella pagetable del user
+
+  ATTENZIONE
+  devo tenere conto anche di fork_cow!
 */
 int
 copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
@@ -536,7 +544,7 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
 
     pte = walk(pagetable, va0, 0);
     if(pte == 0 || (*pte & PTE_V) == 0 || (*pte & PTE_U) == 0 ||
-       (*pte & PTE_W) == 0)
+       ((*pte & PTE_W) == 0 && (*pte & PTE_COW) == 0) )
       return -1;
 
     pa0 = PTE2PA(*pte); // direttamente accessibile dal kernel dato che è directly-mapped

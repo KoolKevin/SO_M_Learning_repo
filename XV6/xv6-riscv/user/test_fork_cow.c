@@ -4,16 +4,25 @@
 int global_var = 10;
 
 int main() {
+    int status, pid;
     int stack_var = 20;
 
     if(fork_cow() == 0) {
-        printf("sono il figlio e scrivo sul mio stack!\n");
+        printf("[FIGLIO]: scrivo sul mio stack!\n");
         stack_var++;
+
+        printf("[FIGLIO]: global_var=%d, stack_var=%d\n", global_var, stack_var);
+        coredump();
     } 
     else {
-        wait((void *)0);
-        printf("sono il padre e scrivo nella mia area dati!\n");
+        pid = wait(&status);
+        printf("[PADRE]: ho aspettato %d -> status: %d\n", pid, status); 
+        printf("[PADRE]: scrivo nella mia area dati!\n");
         global_var++;
+
+        printf("[PADRE]: global_var=%d, stack_var=%d\n", global_var, stack_var);
+        coredump();
     }
+
     return 0;
 }

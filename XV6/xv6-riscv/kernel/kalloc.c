@@ -127,9 +127,6 @@ kfree(void *pa)
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
 
-  // Fill with junk to catch dangling refs.
-  memset(pa, 1, PGSIZE);
-
   /*
       KKoltraka
       Le 5 righe qua sotto, sono una maniera un po' contorta per creare una lista linkata delle pagine libere
@@ -157,6 +154,8 @@ kfree(void *pa)
       
       // se la pagina non è più riferita, la posso liberare    
       if(get_physical_page_refs((uint64)pa) == 0) {
+        // Fill with junk to catch dangling refs.
+        memset(pa, 1, PGSIZE);
         r->next = kmem.freelist;
         kmem.freelist = r;
       }
@@ -168,6 +167,8 @@ kfree(void *pa)
   }
   // se provengo da kinit() devo solo costruire la lista delle pagine libere 
   else {
+    // Fill with junk to catch dangling refs.
+    memset(pa, 1, PGSIZE);
     r->next = kmem.freelist;
     kmem.freelist = r;
   }

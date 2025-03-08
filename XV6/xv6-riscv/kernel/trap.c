@@ -29,6 +29,7 @@ trapinithart(void)
   w_stvec((uint64)kernelvec);
 }
 
+extern struct spinlock wait_lock;
 //
 // handle an interrupt, exception, or system call from user space.
 // called from trampoline.S
@@ -76,6 +77,8 @@ usertrap(void)
     uint64 faulty_va = PGROUNDDOWN(r_stval());
     uint flags;
 
+    acquire(&wait_lock);
+
     printf("gestisco una store page fault per (pid=%d; stval=0x%lx)\n", p->pid, faulty_va);
     if((pte = walk(p->pagetable, faulty_va, 0)) == 0)
       panic("usertrap::store page fault: pte should exist");
@@ -84,7 +87,9 @@ usertrap(void)
 
     // recupero indirizzo fisico e flags dal PTE
     page_pa = PTE2PA(*pte);
-    flags = PTE_FLAGS(*pte) | PTE_W; // ora posso scrivere!
+    flags = PTE_FLAGS(*pte);
+    flags |= PTE_W; // ora posso scrivere!
+    flags &= ~PTE_COW; 
     // recupero il numero di processi che stanno riferendo questa pagina
     int refs = get_physical_page_refs(page_pa);
 
@@ -104,18 +109,18 @@ usertrap(void)
     }
     // se ho solo un riferimento mi basta aggiornare il PTE
     else {
+      printf("\tsono l'unico che sta riferendo la pagina pa=0x%lx e quindi la rendo semplicemente scrivibile!\n", (uint64)page_pa);
       uvmunmap(p->pagetable, faulty_va, 1, 0); 
       mappages(p->pagetable, faulty_va, PGSIZE, (uint64)page_pa, flags);
     }
     
+    release(&wait_lock);
     
     // if(remap_page(p->pagetable, faulty_va, (uint64)new_page_pa, flags) != 0){
     //   printf("usertrap::store page fault: questo non dovrebbe succedere mai dato che sto aggiornando solo un PTE");
     //   kfree(new_page_pa);
     //   setkilled(p);
     // }
-
-    procdump();
   }
   else {
     printf("usertrap(): unexpected scause 0x%lx pid=%d\n", r_scause(), p->pid);
