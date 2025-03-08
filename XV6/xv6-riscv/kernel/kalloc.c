@@ -63,25 +63,25 @@ int get_physical_page_refs(uint64 pa) {
 }
 
 void increase_physical_page_refs(uint64 pa) {
-  #ifdef DEBUG
-  printf("incremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[index].count, (uint64)kmem.freelist);
-  #endif
-
   pa = PGROUNDDOWN(pa);
   int index = (pa - PGROUNDUP((uint64)end)) / PGSIZE;
 
   page_ref_table.page_refs[index].count++;
+
+  #ifdef DEBUG
+  printf("incremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[index].count, (uint64)kmem.freelist);
+  #endif  
 }
 
 void decrease_physical_page_refs(uint64 pa) {
-  #ifdef DEBUG
-  printf("decremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[index].count, (uint64)pa);
-  #endif
-
   pa = PGROUNDDOWN(pa);
   int index = (pa - PGROUNDUP((uint64)end)) / PGSIZE;
 
   page_ref_table.page_refs[index].count--;
+
+  #ifdef DEBUG
+  printf("decremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[index].count, (uint64)pa);
+  #endif  
 }
 
 

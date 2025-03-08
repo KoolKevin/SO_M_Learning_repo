@@ -79,7 +79,10 @@ usertrap(void)
 
     acquire(&wait_lock);
 
+    #ifdef DEBUG
     printf("gestisco una store page fault per (pid=%d; stval=0x%lx)\n", p->pid, faulty_va);
+    #endif
+
     if((pte = walk(p->pagetable, faulty_va, 0)) == 0)
       panic("usertrap::store page fault: pte should exist");
     if((*pte & PTE_V) == 0)
@@ -103,13 +106,15 @@ usertrap(void)
       memmove(new_page_pa, (char*)page_pa, PGSIZE);
       
       decrease_physical_page_refs(page_pa);
-      printf("\tdecremento a %d il numero di riferimenti a pa=0x%lx\n", get_physical_page_refs((uint64)page_pa), (uint64)page_pa);
       uvmunmap(p->pagetable, faulty_va, 1, 0); // non c'è bisogno di controllo di errore
       mappages(p->pagetable, faulty_va, PGSIZE, (uint64)new_page_pa, flags);
     }
     // se ho solo un riferimento mi basta aggiornare il PTE
     else {
+      #ifdef DEBUG
       printf("\tsono l'unico che sta riferendo la pagina pa=0x%lx e quindi la rendo semplicemente scrivibile!\n", (uint64)page_pa);
+      #endif
+      
       uvmunmap(p->pagetable, faulty_va, 1, 0); 
       mappages(p->pagetable, faulty_va, PGSIZE, (uint64)page_pa, flags);
     }

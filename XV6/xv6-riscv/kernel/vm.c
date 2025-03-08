@@ -435,7 +435,10 @@ int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
     if((*pte & PTE_V) == 0)
       panic("uvmshare: page not present");
 
-    printf("\tcondivido: 0x%lx e rendo read-only\n", i);
+    #ifdef DEBUG
+    printf("\tpadre condivide: 0x%lx e rendo tutto read-only\n", i);
+    #endif
+
     // sostituisco i flag PTE_W con PTE_COW 
     if (*pte & PTE_W) {
         *pte &= ~PTE_W;  
@@ -452,7 +455,6 @@ int uvmshare(pagetable_t old, pagetable_t new, uint64 sz) {
       return -1;
     }
     increase_physical_page_refs((uint64)pa);
-    printf("\tincremento a %d il numero di riferimenti a pa=0x%lx\n", get_physical_page_refs((uint64)pa), (uint64)pa);
   }
 
   return 0;
