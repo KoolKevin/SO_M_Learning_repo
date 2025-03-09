@@ -47,11 +47,25 @@ void enqueue(struct ready_queue *coda, struct proc *proc) {
 
 struct proc* dequeue(struct ready_queue *coda) {
   #ifdef DEBUG_PRIO
-  printf("\taggiungo pid=%d alla coda con priorità %d\n", proc->pid, coda->priority_level);
+  printf("\trecupero pid=%d dalla coda con priorità %d\n", proc->pid, coda->priority_level);
   #endif
 
   struct proc *proc = coda->primo;
-  coda->primo = proc->next_ready_proc;
+
+  // se la coda contiene solo un elemento
+  if(coda->primo->next_ready_proc == NULL) {
+    coda->primo = NULL;
+    #ifdef DEBUG_PRIO
+    printf("\tla coda %d aveva solo pid=%d, ora è vuota\n", coda->priority_level, proc->pid);
+    #endif
+  }
+  else {
+    #ifdef DEBUG_PRIO
+    printf("\tpid=%d ora è davanti alla coda %d\n", coda->primo->next_ready_proc->pid, coda->priority_level);
+    #endif
+    coda->primo = proc->next_ready_proc;
+  }
+
   proc->next_ready_proc = NULL;
 
   return proc;
@@ -216,10 +230,6 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
-  // inserisco l'elemento nella coda corrispondente alla sua priorità
-  // (sempre 0 dato il default in procinit) 
-  enqueue(&code_processi_pronti[p->priority], p);
-
   return p;
 }
 
@@ -332,6 +342,12 @@ userinit(void)
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
+  // oltre a renderlo runnable dobbiamo anche aggiungerlo nella 
+  // coda dei processi pronti corretta
+  #ifdef DEBUG_PRIO
+  printf("\t[userinit]: inserisco pid=%d nella coda con priorità %d, dato che è pronto\n", p->pid, code_processi_pronti[p->priority].priority_level);
+  #endif
+  enqueue(&code_processi_pronti[p->priority], p);
 
   release(&p->lock);
 }
@@ -401,7 +417,20 @@ fork(void)
   release(&wait_lock);
 
   acquire(&np->lock);
+  // il figlio ha la priorità specificata dal padre
+  np->priority = p->child_priority;
+  np->child_priority = np->priority;
+  // non dovrebbe servire dato che i descrittori che recupero da allocproc()
+  // sono stati liberati da procinit()/freeproc() ... non si sa mai
+  // np->next_ready_proc = NULL;    
+
   np->state = RUNNABLE;
+  // oltre a renderlo runnable dobbiamo anche aggiungerlo nella 
+  // coda dei processi pronti corretta
+  #ifdef DEBUG_PRIO
+  printf("\t[fork]: inserisco pid=%d nella coda con priorità %d, dato che è appena nato\n", p->pid, code_processi_pronti[p->priority].priority_level);
+  #endif
+  enqueue(&code_processi_pronti[np->priority], p);
   release(&np->lock);
 
   return pid;
@@ -472,8 +501,22 @@ int fork_cow(void) {
   acquire(&wait_lock);
   np->parent = p;
   release(&wait_lock);
+  
   acquire(&np->lock);
+  // il figlio ha la priorità specificata dal padre
+  np->priority = p->child_priority;
+  np->child_priority = np->priority;
+  // non dovrebbe servire dato che i descrittori che recupero da allocproc()
+  // sono stati liberati da procinit()/freeproc() ... non si sa mai
+  // np->next_ready_proc = NULL;    
+
   np->state = RUNNABLE;
+  // oltre a renderlo runnable dobbiamo anche aggiungerlo nella 
+  // coda dei processi pronti corretta
+  #ifdef DEBUG_PRIO
+  printf("\t[fork_cow]: inserisco pid=%d nella coda con priorità %d, dato che è appena nato\n", p->pid, code_processi_pronti[p->priority].priority_level);
+  #endif
+  enqueue(&code_processi_pronti[np->priority], p);
   release(&np->lock);
 
   return pid;
@@ -703,7 +746,13 @@ yield(void)
 {
   struct proc *p = myproc();
   acquire(&p->lock);
+
   p->state = RUNNABLE;
+  #ifdef DEBUG_PRIO
+  printf("\t[yield]: inserisco pid=%d nella coda con priorità %d, dato che ha ceduto la CPU\n", p->pid, code_processi_pronti[p->priority].priority_level);
+  #endif
+  enqueue(&code_processi_pronti[p->priority], p);
+
   sched();
   // riprendo da qui solo dopo esser stato rischedulato
   release(&p->lock);
@@ -792,6 +841,11 @@ wakeup(void *chan)
       acquire(&p->lock);
       if(p->state == SLEEPING && p->chan == chan) {
         p->state = RUNNABLE;
+        #ifdef DEBUG_PRIO
+        printf("\t[wakeup]: inserisco pid=%d nella coda con priorità %d, dato che si è verificato l'evento che lo stava tenendo sospeso\n",
+               p->pid, code_processi_pronti[p->priority].priority_level);
+        #endif
+        enqueue(&code_processi_pronti[p->priority], p);
       }
       release(&p->lock);
     }
@@ -801,6 +855,13 @@ wakeup(void *chan)
 // Kill the process with the given pid.
 // The victim won't exit until it tries to return
 // to user space (see usertrap() in trap.c).
+
+/*
+Kill does very little: it just sets the victim’s p->killed and, if it is sleeping, wakes it up.
+Eventually the victim will enter or leave the kernel, at which point code in usertrap will call
+exit if p->killed is set. If the victim is running in user space, it will soon enter the kernel
+by making a system call or because the timer (or some other device) interrupts.
+*/
 int
 kill(int pid)
 {
@@ -813,6 +874,8 @@ kill(int pid)
       if(p->state == SLEEPING){
         // Wake process from sleep().
         p->state = RUNNABLE;
+        printf("\t[kill]: inserisco pid=%d nella coda con priorità %d, dato che è stato ucciso e deve uscire\n",
+               p->pid, code_processi_pronti[p->priority].priority_level);
       }
       release(&p->lock);
       return 0;
