@@ -22,14 +22,17 @@ struct ready_queue code_processi_pronti[NUM_PRIO];
 
 void enqueue(struct ready_queue *coda, struct proc *proc) {
   #ifdef DEBUG_PRIO
-  printf("\taggiungo pid=%d alla coda con priorità %d\n", proc->pid, coda->priority_level);
+  printf("\t\taggiungo pid=%d alla coda con priorità %d\n", proc->pid, coda->priority_level);
   #endif
+
+  proc->next_ready_proc = NULL;  // per sicurezza
+
   // se la coda è vuota il primo descrittore che aggiungo
   // è anche l'ultimo
   if(coda->ultimo == NULL) {
     coda->primo = proc;
     #ifdef DEBUG_PRIO
-    printf("\tla coda %d era vuota\n", coda->priority_level);
+    printf("\t\tla coda %d era vuota\n", coda->priority_level);
     #endif
   }
   // altrimenti prima di sostituire l'ex-ultimo
@@ -37,7 +40,7 @@ void enqueue(struct ready_queue *coda, struct proc *proc) {
   else {
     coda->ultimo->next_ready_proc = proc;
     #ifdef DEBUG_PRIO
-    printf("\tla coda NON era vuota\n");
+    printf("\t\tla coda NON era vuota\n");
     #endif
   }
   
@@ -46,22 +49,30 @@ void enqueue(struct ready_queue *coda, struct proc *proc) {
 }
 
 struct proc* dequeue(struct ready_queue *coda) {
-  #ifdef DEBUG_PRIO
-  printf("\trecupero pid=%d dalla coda con priorità %d\n", proc->pid, coda->priority_level);
-  #endif
+  if (coda->primo == NULL) {
+    #ifdef DEBUG_PRIO
+    printf("\t\tla coda con priorità %d era vuota... qua c'è qualche errore...\n", coda->priority_level);
+    #endif
+    return NULL;  
+  }
 
   struct proc *proc = coda->primo;
 
+  #ifdef DEBUG_PRIO
+  printf("\t\trecupero pid=%d dalla coda con priorità %d\n", proc->pid, coda->priority_level);
+  #endif
+  
   // se la coda contiene solo un elemento
   if(coda->primo->next_ready_proc == NULL) {
     coda->primo = NULL;
+    coda->ultimo = NULL;
     #ifdef DEBUG_PRIO
-    printf("\tla coda %d aveva solo pid=%d, ora è vuota\n", coda->priority_level, proc->pid);
+    printf("\t\tla coda %d aveva solo pid=%d, ora è vuota\n", coda->priority_level, proc->pid);
     #endif
   }
   else {
     #ifdef DEBUG_PRIO
-    printf("\tpid=%d ora è davanti alla coda %d\n", coda->primo->next_ready_proc->pid, coda->priority_level);
+    printf("\t\tpid=%d ora è davanti alla coda %d\n", coda->primo->next_ready_proc->pid, coda->priority_level);
     #endif
     coda->primo = proc->next_ready_proc;
   }
@@ -428,9 +439,9 @@ fork(void)
   // oltre a renderlo runnable dobbiamo anche aggiungerlo nella 
   // coda dei processi pronti corretta
   #ifdef DEBUG_PRIO
-  printf("\t[fork]: inserisco pid=%d nella coda con priorità %d, dato che è appena nato\n", p->pid, code_processi_pronti[p->priority].priority_level);
+  printf("\t[fork]: inserisco pid=%d nella coda con priorità %d, dato che è appena nato\n", np->pid, code_processi_pronti[np->priority].priority_level);
   #endif
-  enqueue(&code_processi_pronti[np->priority], p);
+  enqueue(&code_processi_pronti[np->priority], np);
   release(&np->lock);
 
   return pid;
@@ -514,9 +525,9 @@ int fork_cow(void) {
   // oltre a renderlo runnable dobbiamo anche aggiungerlo nella 
   // coda dei processi pronti corretta
   #ifdef DEBUG_PRIO
-  printf("\t[fork_cow]: inserisco pid=%d nella coda con priorità %d, dato che è appena nato\n", p->pid, code_processi_pronti[p->priority].priority_level);
+  printf("\t[fork_cow]: inserisco pid=%d nella coda con priorità %d, dato che è appena nato\n", np->pid, code_processi_pronti[np->priority].priority_level);
   #endif
-  enqueue(&code_processi_pronti[np->priority], p);
+  enqueue(&code_processi_pronti[np->priority], np);
   release(&np->lock);
 
   return pid;
@@ -684,7 +695,11 @@ scheduler(void)
         // before jumping back to us.
         p->state = RUNNING;
         c->proc = p;
-
+        #ifdef DEBUG_PRIO
+        printf("\t[scheduler]: estraggo pid=%d dalla coda con priorità %d, dato che è stato schedulato\n",
+                p->pid, code_processi_pronti[p->priority].priority_level);
+        #endif
+        dequeue(&code_processi_pronti[p->priority]);
         /*
           kkoltraka:
           swtch() viene chiamato come una normale funzione C:
