@@ -104,4 +104,18 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  
+  // agiunte da me
+  int priority;                // priorità del processo
+  int child_priority;          // priorità con cui verranno creati i suoi figli
+  struct proc *next_ready_proc;// indice del prossimo processo pronto nella coda
+};
+
+// strutture dati per la gestione delle priorità
+#define NUM_PRIO 8
+
+struct ready_queue {
+  int priority_level;
+  struct proc *primo;
+  struct proc *ultimo;
 };

@@ -79,7 +79,7 @@ usertrap(void)
 
     acquire(&wait_lock);
 
-    #ifdef DEBUG
+    #ifdef DEBUG_COW
     printf("gestisco una store page fault per (pid=%d; stval=0x%lx)\n", p->pid, faulty_va);
     #endif
 
@@ -111,7 +111,7 @@ usertrap(void)
     }
     // se ho solo un riferimento mi basta aggiornare il PTE
     else {
-      #ifdef DEBUG
+      #ifdef DEBUG_COW
       printf("\tsono l'unico che sta riferendo la pagina pa=0x%lx e quindi la rendo semplicemente scrivibile!\n", (uint64)page_pa);
       #endif
       

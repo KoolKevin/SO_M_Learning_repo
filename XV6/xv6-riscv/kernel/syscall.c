@@ -126,7 +126,7 @@ uint64 sys_procdump() {
 }
 
 uint64 sys_fork_cow(void) {
-  #ifdef DEBUG
+  #ifdef DEBUG_COW
   printf("eseguito fork_cow()\n");
   #endif
 

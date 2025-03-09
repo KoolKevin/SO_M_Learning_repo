@@ -6,11 +6,56 @@
 #include "proc.h"
 #include "defs.h"
 
-// #define DEBUG 1
 
 struct cpu cpus[NCPU];
 
-struct proc proc[NPROC];
+struct proc proc[NPROC]; 
+
+// aggiungiamo le code dei processi pronti come struttura
+// dati che supporta lo scheduling con priorità.
+// lo scheduler scorrerà queste code e non più la tabella 
+// dei descrittori
+//
+// 0          -> priorità max;
+// NUM_PRIO-1 -> priorità min
+struct ready_queue code_processi_pronti[NUM_PRIO];
+
+void enqueue(struct ready_queue *coda, struct proc *proc) {
+  #ifdef DEBUG_PRIO
+  printf("\taggiungo pid=%d alla coda con priorità %d\n", proc->pid, coda->priority_level);
+  #endif
+  // se la coda è vuota il primo descrittore che aggiungo
+  // è anche l'ultimo
+  if(coda->ultimo == NULL) {
+    coda->primo = proc;
+    #ifdef DEBUG_PRIO
+    printf("\tla coda %d era vuota\n", coda->priority_level);
+    #endif
+  }
+  // altrimenti prima di sostituire l'ex-ultimo
+  // devo aggiornare il suo successore
+  else {
+    coda->ultimo->next_ready_proc = proc;
+    #ifdef DEBUG_PRIO
+    printf("\tla coda NON era vuota\n");
+    #endif
+  }
+  
+
+  coda->ultimo = proc;
+}
+
+struct proc* dequeue(struct ready_queue *coda) {
+  #ifdef DEBUG_PRIO
+  printf("\taggiungo pid=%d alla coda con priorità %d\n", proc->pid, coda->priority_level);
+  #endif
+
+  struct proc *proc = coda->primo;
+  coda->primo = proc->next_ready_proc;
+  proc->next_ready_proc = NULL;
+
+  return proc;
+}
 
 struct proc *initproc;
 
@@ -49,7 +94,8 @@ proc_mapstacks(pagetable_t kpgtbl)
   }
 }
 
-// initialize the proc table.
+
+// initialize the proc table e le code dei processi pronti.
 void
 procinit(void)
 {
@@ -61,8 +107,26 @@ procinit(void)
       initlock(&p->lock, "proc");
       p->state = UNUSED;
       p->kstack = KSTACK((int) (p - proc));
+      // come default imposto tutti i processi 
+      // con priorità massima
+      p->priority = 0;
+      p->child_priority = 0;
+      p->next_ready_proc = NULL;
+  }
+
+  // devo inizializzare anche le code
+  // (all' inizio non ci sono processi)
+  for(int i=0; i<NUM_PRIO; i++) {
+    code_processi_pronti[i].priority_level = i;
+    code_processi_pronti[i].primo  = NULL;
+    code_processi_pronti[i].ultimo = NULL;
   }
 }
+
+
+
+
+
 
 // Must be called with interrupts disabled,
 // to prevent race with process being moved
@@ -152,6 +216,10 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  // inserisco l'elemento nella coda corrispondente alla sua priorità
+  // (sempre 0 dato il default in procinit) 
+  enqueue(&code_processi_pronti[p->priority], p);
+
   return p;
 }
 
@@ -175,6 +243,11 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+
+  // resetto anche i nuovi campi (che avevo impostato in procinit)
+  p->priority = 0;
+  p->child_priority = 0;
+  p->next_ready_proc = NULL;
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -354,7 +427,7 @@ int fork_cow(void) {
     return -1;
   }
 
-  #ifdef DEBUG
+  #ifdef DEBUG_COW
   printf("Coredump del processo padre PRIMA DI FORK_COW:\n");
   coredump(p->pagetable, p->sz);
   printf("\n");
@@ -371,7 +444,7 @@ int fork_cow(void) {
   }
   np->sz = p->sz;
 
-  #ifdef DEBUG
+  #ifdef DEBUG_COW
   printf("Coredump del processo padre DOPO DI FORK_COW:\n");
   coredump(p->pagetable, p->sz);
   printf("\n");
