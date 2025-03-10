@@ -492,9 +492,9 @@ void coredump(pagetable_t table, uint64 sz) {
 
     int refs = get_physical_page_refs(pa);
     printf("\trefs = %d\n", refs);
-    
-    printf("\n");
   }
+
+  printf("\n");
 }
 
 

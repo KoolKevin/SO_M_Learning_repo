@@ -28,7 +28,9 @@ int interrupt_on(void);
 int interrupt_off(void);
 int procdump(void);
 int fork_cow(void);       
-int coredump(void);   
+int coredump(void);
+int set_priority(int);
+int set_child_priority(int);
 
 // ulib.c
 int stat(const char*, struct stat*);

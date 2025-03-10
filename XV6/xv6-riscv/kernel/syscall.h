@@ -27,3 +27,5 @@
 #define SYS_procdump  25
 #define SYS_fork_cow  26
 #define SYS_coredump  27
+#define SYS_set_priority 28
+#define SYS_set_child_priority 29

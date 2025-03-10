@@ -143,6 +143,26 @@ uint64 sys_coredump(void) {
   return 0;
 }
 
+uint64 sys_set_priority(void) {
+  struct proc *p = myproc();
+
+  int new_priority;
+  argint(0, &new_priority);
+  p->priority = new_priority;
+
+  return 0;
+}
+
+uint64 sys_set_child_priority(void) {
+  struct proc *p = myproc();
+
+  int new_priority;
+  argint(0, &new_priority);
+  p->child_priority = new_priority;
+
+  return 0;
+}
+
 /*
   sintassi che non conoscevo, a quanto pare in C si può inizializzare un array 
   anche specificando tra quadre l'indice del valore
@@ -178,6 +198,8 @@ static uint64 (*syscalls[])(void) = {
 [SYS_procdump] sys_procdump,
 [SYS_fork_cow] sys_fork_cow,
 [SYS_coredump] sys_coredump,
+[SYS_set_priority]sys_set_priority,
+[SYS_set_child_priority]sys_set_child_priority,
 };
 
 void

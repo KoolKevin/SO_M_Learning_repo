@@ -77,7 +77,9 @@ usertrap(void)
     uint64 faulty_va = PGROUNDDOWN(r_stval());
     uint flags;
 
-    acquire(&wait_lock);
+    // uso un lock a caso per gestire le stampe sovrapposte
+    // trova una soluzione migliore...
+    acquire(&wait_lock); 
 
     #ifdef DEBUG_COW
     printf("gestisco una store page fault per (pid=%d; stval=0x%lx)\n", p->pid, faulty_va);

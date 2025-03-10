@@ -43,3 +43,5 @@ entry("interrupt_off");
 entry("procdump");
 entry("fork_cow");
 entry("coredump");
+entry("set_priority");
+entry("set_child_priority");

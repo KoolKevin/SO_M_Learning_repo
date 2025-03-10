@@ -684,7 +684,8 @@ scheduler(void)
     intr_on();
 
     int found = 0;
-    int cur_prio = 0;
+    int cur_prio = 0; // riparto ogni volta dalla priorità più alta
+
     // for(p = proc; p < &proc[NPROC]; p++)
     //
     // Non scorro più la tabella dei descrittori! Adesso itero sulle code
@@ -733,6 +734,9 @@ scheduler(void)
       printf("NON TROVATO\n\n");
       #endif
 
+      // sotto non sembra star funzionando bene
+
+      // intr_off();
       intr_on();
       asm volatile("wfi");
     }
@@ -988,9 +992,10 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    printf("%d %s %s", p->pid, state, p->name);
+    printf("%d %s %s prio=%d child_prio=%d", p->pid, state, p->name, p->priority, p->child_priority);
     printf("\n");
 
+    printf("COREDUMP di %d\n", p->pid);
     coredump(p->pagetable, p->sz);
   }
   release(&wait_lock);

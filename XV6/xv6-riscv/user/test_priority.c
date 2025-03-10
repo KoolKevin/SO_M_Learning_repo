@@ -2,12 +2,15 @@
 #include "user/user.h"      // contiene le dichiarazione dei wrapper alle system call 
 
 int main() {
-    printf("Hello world! Sono riuscito a compilare ed eseguire il mio primo programma dentro a xv6\n");
+    interrupt_off(); // disabilito per evitare la preemption
 
-    hello(); // la mia syscall
-
-    interrupt_off();
-    if(fork() != 0) {
+    set_child_priority(1);
+    
+    if(fork() == 0) {
+        printf("sono il figlio\n");
+    } 
+    else {
+        printf("sono il padre\n");
         procdump();
         interrupt_on();
     }
