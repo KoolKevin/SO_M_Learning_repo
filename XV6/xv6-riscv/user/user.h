@@ -26,7 +26,7 @@ int uptime(void);
 int hello(void); 
 int interrupt_on(void);
 int interrupt_off(void);
-int procdump(void);
+int procdump(int);
 int fork_cow(void);       
 int coredump(void);
 int set_priority(int);

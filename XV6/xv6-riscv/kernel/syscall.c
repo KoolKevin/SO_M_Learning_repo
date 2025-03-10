@@ -121,7 +121,9 @@ uint64 sys_interrupt_off() {
 }
 
 uint64 sys_procdump() {
-  procdump();
+  int coredump;
+  argint(0, &coredump);
+  procdump(coredump);
   return 0;
 }
 

@@ -734,7 +734,9 @@ scheduler(void)
       printf("NON TROVATO\n\n");
       #endif
 
-      // non sembra star bloccando troppo
+      // non sembra star bloccando troppo e non è colpa di 
+      // una implementazione errata dello scheduler, hai già
+      // controllato anche con la versione round-robin
       // intr_off();
       intr_on();
       asm volatile("wfi");
@@ -969,7 +971,7 @@ either_copyin(void *dst, int user_src, uint64 src, uint64 len)
 // Runs when user types ^P on console.
 // No lock to avoid wedging a stuck machine further.
 void
-procdump(void)
+procdump(int dump_core)
 {
   static char *states[] = {
   [UNUSED]    "unused",
@@ -994,8 +996,10 @@ procdump(void)
     printf("%d %s %s prio=%d child_prio=%d", p->pid, state, p->name, p->priority, p->child_priority);
     printf("\n");
 
-    printf("COREDUMP di %d\n", p->pid);
-    coredump(p->pagetable, p->sz);
+    if(dump_core != 0) {
+      printf("COREDUMP di %d\n", p->pid);
+      coredump(p->pagetable, p->sz);
+    }
   }
   release(&wait_lock);
 }

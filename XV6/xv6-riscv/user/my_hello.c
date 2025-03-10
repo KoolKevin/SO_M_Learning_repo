@@ -8,7 +8,7 @@ int main() {
 
     interrupt_off();
     if(fork() != 0) {
-        procdump();
+        procdump(1);
         interrupt_on();
     }
 
