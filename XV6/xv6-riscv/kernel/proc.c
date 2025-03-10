@@ -27,15 +27,16 @@ void enqueue(struct ready_queue *coda, struct proc *proc) {
 
   proc->next_ready_proc = NULL;  // per sicurezza
 
-  // se la coda è vuota il primo descrittore che aggiungo
-  // è anche l'ultimo
+  acquire(&coda->lock);
+  // se la coda è vuota, il descrittore che aggiungo
+  // in fondo alla coda è anche il primo
   if(coda->ultimo == NULL) {
     coda->primo = proc;
     #ifdef DEBUG_PRIO
     printf("\t\tla coda %d era vuota\n", coda->priority_level);
     #endif
   }
-  // altrimenti prima di sostituire l'ex-ultimo
+  // altrimenti, prima di sostituire l'ex-ultimo
   // devo aggiornare il suo successore
   else {
     coda->ultimo->next_ready_proc = proc;
@@ -44,15 +45,20 @@ void enqueue(struct ready_queue *coda, struct proc *proc) {
     #endif
   }
   
-
   coda->ultimo = proc;
+
+  release(&coda->lock);
 }
 
 struct proc* dequeue(struct ready_queue *coda) {
+  acquire(&coda->lock);
+
   if (coda->primo == NULL) {
     #ifdef DEBUG_PRIO
-    printf("\t\tla coda con priorità %d era vuota... qua c'è qualche errore...\n", coda->priority_level);
+    printf("\t\tla coda con priorità %d era vuota\n", coda->priority_level);
     #endif
+    release(&coda->lock);
+
     return NULL;  
   }
 
@@ -76,6 +82,8 @@ struct proc* dequeue(struct ready_queue *coda) {
     #endif
     coda->primo = proc->next_ready_proc;
   }
+
+  release(&coda->lock);
 
   proc->next_ready_proc = NULL;
 
@@ -668,17 +676,6 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
 
-  /*
-    KKoltraka
-
-    Sembra che xv6 non abbia un descrittore speciale per il processo kernel
-      - l'array proc è riservato ai processi utente
-
-    Di conseguenza quando una CPU sta eseguendo il kernel, viene impostata a NULL (0)
-    la struct che descrive il processo in esecuzione su quest'ultima
-    
-    (Durante il boot non ho quindi bisogno di inizializzare mycpu)
-  */
   c->proc = 0;
   for(;;){
     // The most recent process to run may have had interrupts
@@ -687,39 +684,55 @@ scheduler(void)
     intr_on();
 
     int found = 0;
-    for(p = proc; p < &proc[NPROC]; p++) {
-      acquire(&p->lock);
-      if(p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
-        p->state = RUNNING;
-        c->proc = p;
+    int cur_prio = 0;
+    // for(p = proc; p < &proc[NPROC]; p++)
+    //
+    // Non scorro più la tabella dei descrittori! Adesso itero sulle code
+    // e recupero un descrittore da quella più prioritaria
+
+    // scheduling
+    while (cur_prio < NUM_PRIO && found == 0) {
+      if( (p=dequeue(&code_processi_pronti[cur_prio])) != NULL) {
+        found = 1;
+
         #ifdef DEBUG_PRIO
         printf("\t[scheduler]: estraggo pid=%d dalla coda con priorità %d, dato che è stato schedulato\n",
-                p->pid, code_processi_pronti[p->priority].priority_level);
+                p->pid, code_processi_pronti[cur_prio].priority_level);
         #endif
-        dequeue(&code_processi_pronti[p->priority]);
-        /*
-          kkoltraka:
-          swtch() viene chiamato come una normale funzione C:
-          Quando una funzione viene chiamata, il compilatore genera un'istruzione call che:
-            - Salva il Program Counter (pc) nel registro ra (Return Address).
-            - Salta all’indirizzo della funzione swtch().
-          Questo significa che quando swtch() salva il registro ra, sta in realtà salvando il PC del punto successivo
-          all'ultima chiamata di swtch().
-        */
-        swtch(&c->context, &p->context);
-
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        c->proc = 0;
-        found = 1;
       }
+      else {
+        cur_prio++;
+      }
+    }
+
+    // cambio di contesto
+    if(found == 1) {
+      #ifdef DEBUG_PRIO
+      printf("TROVATO\n\n");
+      #endif
+      
+      // Switch to chosen process.  It is the process's job
+      // to release its lock and then reacquire it
+      // before jumping back to us.
+      acquire(&p->lock);
+
+      p->state = RUNNING;
+      c->proc = p;
+      
+      swtch(&c->context, &p->context);
+
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      c->proc = 0;
+
       release(&p->lock);
     }
-    if(found == 0) {
-      // nothing to run; stop running on this core until a (timer) interrupt.
+    // nothing to run; stop running on this core until a (timer) interrupt.
+    else {
+      #ifdef DEBUG_PRIO
+      printf("NON TROVATO\n\n");
+      #endif
+
       intr_on();
       asm volatile("wfi");
     }

@@ -114,6 +114,11 @@ struct proc {
 #define NUM_PRIO 8
 
 struct ready_queue {
+  // più kernel thread, anche in esecuzione
+  // su core diversi, possono accedere ad una
+  // coda
+  struct spinlock lock;
+
   int priority_level;
   struct proc *primo;
   struct proc *ultimo;
