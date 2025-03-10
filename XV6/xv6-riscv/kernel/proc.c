@@ -734,8 +734,7 @@ scheduler(void)
       printf("NON TROVATO\n\n");
       #endif
 
-      // sotto non sembra star funzionando bene
-
+      // non sembra star bloccando troppo
       // intr_off();
       intr_on();
       asm volatile("wfi");
