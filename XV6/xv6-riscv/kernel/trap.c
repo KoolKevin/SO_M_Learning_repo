@@ -30,6 +30,53 @@ trapinithart(void)
 }
 
 extern struct spinlock wait_lock;
+
+
+void cow_handler(uint64 faulty_va, uint64 page_pa, uint flags) {
+  struct proc *p = myproc();
+  char* new_page_pa;
+  // recupero il numero di processi che stanno riferendo questa pagina
+  int refs = get_physical_page_refs(page_pa);
+  // ora posso scrivere!
+  flags |= PTE_W; 
+  flags &= ~PTE_COW; 
+  
+  // alloco la pagina di copia e aggiorno il vecchio   
+  // mapping che puntava alla pagina condivisa
+  if(refs > 1) {
+    if((new_page_pa = kalloc()) == 0) {
+      printf("usertrap::store page fault: non ho abbastanza memoria per allocare una nuova pagina");
+      setkilled(p);
+    }
+    memmove(new_page_pa, (char*)page_pa, PGSIZE);
+    
+    decrease_physical_page_refs(page_pa);
+    // uvmunmap(p->pagetable, faulty_va, 1, 0); // non c'è bisogno di controllo di errore
+    mappages(p->pagetable, faulty_va, PGSIZE, (uint64)new_page_pa, flags);
+
+    #ifdef DEBUG_COW
+    printf("[kernel thread %d] ho allocato una nuova pagina fisica 0x%lx con cui rimappare la pagina virtuale: %lx\n",
+            p->pid, (uint64)new_page_pa, faulty_va);
+    printf("[kernel thread %d] i riferimenti alla vecchia pagina 0x%lx sono scesi a %d\n", 
+            p->pid, (uint64)page_pa, get_physical_page_refs(page_pa));
+    #endif
+  }
+  // se ho solo un riferimento mi basta aggiornare il PTE
+  else {
+    #ifdef DEBUG_COW
+    printf("[kernel thread %d] sono l'unico che sta riferendo la pagina pa=0x%lx e quindi la rendo semplicemente scrivibile!\n",
+            p->pid, (uint64)page_pa);
+    #endif
+    
+    // uvmunmap(p->pagetable, faulty_va, 1, 0); 
+    mappages(p->pagetable, faulty_va, PGSIZE, (uint64)page_pa, flags);
+  }
+  
+  #ifdef DEBUG_COW
+  release(&wait_lock);
+  #endif
+}
+
 //
 // handle an interrupt, exception, or system call from user space.
 // called from trampoline.S
@@ -73,63 +120,36 @@ usertrap(void)
   else if(r_scause() == 0xf) { // 0xf == store page fault (fork_cow) 
     pte_t *pte;
     uint64 page_pa;
-    char* new_page_pa;
     uint64 faulty_va = PGROUNDDOWN(r_stval());
     uint flags;
 
-    // uso un lock a caso per gestire le stampe sovrapposte
-    // trova una soluzione migliore...
-    acquire(&wait_lock); 
-
     #ifdef DEBUG_COW
-    printf("gestisco una store page fault per (pid=%d; stval=0x%lx)\n", p->pid, faulty_va);
+    // uso un lock per gestire le stampe sovrapposte
+    acquire(&wait_lock); 
+    printf("[kernel thread %d] gestisco una store page fault con stval=0x%lx\n", p->pid, faulty_va);
     #endif
 
+    // recupero PTE, indirizzo fisico e flags dell'indirizzo che ha generato la exception
     if((pte = walk(p->pagetable, faulty_va, 0)) == 0)
       panic("usertrap::store page fault: pte should exist");
     if((*pte & PTE_V) == 0)
       panic("usertrap::store page fault: page not present");
-
-    // recupero indirizzo fisico e flags dal PTE
+    
     page_pa = PTE2PA(*pte);
     flags = PTE_FLAGS(*pte);
-    flags |= PTE_W; // ora posso scrivere!
-    flags &= ~PTE_COW; 
-    // recupero il numero di processi che stanno riferendo questa pagina
-    int refs = get_physical_page_refs(page_pa);
 
-    // alloco la pagina di copia e aggiorno il vecchio   
-    // mapping che puntava alla pagina condivisa
-    if(refs > 1) {
-      if((new_page_pa = kalloc()) == 0) {
-        printf("usertrap::store page fault: non ho abbastanza memoria per allocare una nuova pagina");
-        setkilled(p);
-      }
-      memmove(new_page_pa, (char*)page_pa, PGSIZE);
-      
-      decrease_physical_page_refs(page_pa);
-      uvmunmap(p->pagetable, faulty_va, 1, 0); // non c'è bisogno di controllo di errore
-      mappages(p->pagetable, faulty_va, PGSIZE, (uint64)new_page_pa, flags);
+    // controllo se la store exception è stata generata su una pagina
+    // che può essere resa scrivibile
+    if((flags & PTE_COW) != 0) {
+      cow_handler(faulty_va, page_pa, flags);
     }
-    // se ho solo un riferimento mi basta aggiornare il PTE
     else {
-      #ifdef DEBUG_COW
-      printf("\tsono l'unico che sta riferendo la pagina pa=0x%lx e quindi la rendo semplicemente scrivibile!\n", (uint64)page_pa);
-      #endif
-      
-      uvmunmap(p->pagetable, faulty_va, 1, 0); 
-      mappages(p->pagetable, faulty_va, PGSIZE, (uint64)page_pa, flags);
+      printf("usertrap(): unexpected scause 0x%lx pid=%d\n", r_scause(), p->pid);
+      printf("            sepc=0x%lx stval=0x%lx\n", r_sepc(), r_stval());
+      setkilled(p);
     }
-    
-    release(&wait_lock);
-    
-    // if(remap_page(p->pagetable, faulty_va, (uint64)new_page_pa, flags) != 0){
-    //   printf("usertrap::store page fault: questo non dovrebbe succedere mai dato che sto aggiornando solo un PTE");
-    //   kfree(new_page_pa);
-    //   setkilled(p);
-    // }
   }
-  else {
+  else {  // altri tipi di eccezione
     printf("usertrap(): unexpected scause 0x%lx pid=%d\n", r_scause(), p->pid);
     printf("            sepc=0x%lx stval=0x%lx\n", r_sepc(), r_stval());
     setkilled(p);

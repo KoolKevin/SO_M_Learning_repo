@@ -13,6 +13,7 @@ int main() {
 
         printf("[FIGLIO]: global_var=%d, stack_var=%d\n", global_var, stack_var);
         coredump();
+        printf("[FIGLIO]: termino! Le mie pagine ora avranno un riferimento in meno\n");
     } 
     else {
         pid = wait(&status);

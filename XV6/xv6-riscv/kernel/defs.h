@@ -197,5 +197,5 @@ void            virtio_disk_intr(void);
 
 #define NULL ((void*)0)
 
-// #define DEBUG_COW 1
+#define DEBUG_COW 1
 // #define DEBUG_PRIO 1

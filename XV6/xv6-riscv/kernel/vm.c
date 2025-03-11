@@ -196,40 +196,8 @@ mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
   for(;;){
     if((pte = walk(pagetable, a, 1)) == 0)
       return -1;
-    if(*pte & PTE_V)
-      panic("mappages: remap");
-    *pte = PA2PTE(pa) | perm | PTE_V;
-    if(a == last)
-      break;
-    a += PGSIZE;
-    pa += PGSIZE;
-  }
-  return 0;
-}
-
-
-// kkoltraka: uguale a sopra a meno di un check.
-// Creo una nuova funzione per evitare di rompere il kernel
-// in punti che non sto considerando
-int
-remappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
-{
-  uint64 a, last;
-  pte_t *pte;
-
-  if((va % PGSIZE) != 0)
-    panic("mappages: va not aligned");
-  if((size % PGSIZE) != 0)
-    panic("mappages: size not aligned");
-  if(size == 0)
-    panic("mappages: size");
-  
-  a = va;
-  last = va + size - PGSIZE;
-  for(;;){
-    printf("\trimappo va: %lx in pa: %lx\n", a, pa);
-    if((pte = walk(pagetable, a, 0)) == 0)
-      return -1;
+    // kkoltraka: commento via questo pezzo per fork_cow
+    // sicuramente questo non farà danni in altre parti del kernel
     // if(*pte & PTE_V)
     //   panic("mappages: remap");
     *pte = PA2PTE(pa) | perm | PTE_V;
@@ -240,6 +208,35 @@ remappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
   }
   return 0;
 }
+
+
+// // kkoltraka: scritto io per fork_cow
+// int remap_page(pagetable_t pagetable, uint64 va, uint64 size, int flags)
+// {
+//   uint64 a, last;
+//   pte_t *pte;
+
+//   if((va % PGSIZE) != 0)
+//     panic("mappages: va not aligned");
+//   if((size % PGSIZE) != 0)
+//     panic("mappages: size not aligned");
+//   if(size == 0)
+//     panic("mappages: size");
+  
+
+//     printf("\trimappo va: %lx in pa: %lx\n", a, pa);
+//     if((pte = walk(pagetable, a, 0)) == 0)
+//       return -1;
+//     // if(*pte & PTE_V)
+//     //   panic("mappages: remap");
+//     *pte = PA2PTE(pa) | perm | PTE_V;
+//     if(a == last)
+//       break;
+//     a += PGSIZE;
+//     pa += PGSIZE;
+//   }
+//   return 0;
+// }
 
 // Remove npages of mappings starting from va. va must be
 // page-aligned. The mappings must exist.

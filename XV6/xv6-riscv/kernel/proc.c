@@ -470,18 +470,18 @@ int fork_cow(void) {
   struct proc *np;
   struct proc *p = myproc();
 
+  #ifdef DEBUG_COW
+  printf("\n----- FORK_COW ESEGUITA -----\n\n\n");
+  #endif
+
   // Allocate process.
   if((np = allocproc()) == 0){
     return -1;
   }
 
   #ifdef DEBUG_COW
-  printf("Coredump del processo padre PRIMA DI FORK_COW:\n");
+  printf("--- COREDUMP di pid: %d, padre di: %d, PRIMA DI FORK_COW ---\n", p->pid, np->pid);
   coredump(p->pagetable, p->sz);
-  printf("\n");
-  printf("Coredump del processo figlio PRIMA DI FORK_COW:\n");
-  coredump(np->pagetable, np->sz);
-  printf("\n");
   #endif
 
   // Rimappo la memoria del padre nella tabella del figlio e imposto tutto read-only
@@ -493,12 +493,10 @@ int fork_cow(void) {
   np->sz = p->sz;
 
   #ifdef DEBUG_COW
-  printf("Coredump del processo padre DOPO DI FORK_COW:\n");
+  printf("--- COREDUMP di pid: %d, processo padre, DOPO FORK_COW ---\n", p->pid);
   coredump(p->pagetable, p->sz);
-  printf("\n");
-  printf("Coredump del processo figlio DOPO DI FORK_COW:\n");
+  printf("--- COREDUMP di pid: %d, processo figlio, DOPO FORK_COW ---\n", np->pid);
   coredump(np->pagetable, np->sz);
-  printf("\n");
   #endif
 
   // copy saved user registers.
