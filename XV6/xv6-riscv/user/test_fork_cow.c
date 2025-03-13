@@ -8,7 +8,7 @@ int main() {
     int free_mem = (free_pages*4096)/(1024*1024); // la CPU corrente non supporta float
     printf("attualmente ci sono %d pagine libere, corrispondenti a %d MiB\n", free_pages, free_mem);
 
-    printf("divento enorme allocando 1 milione di interi (4MiB)!!!");
+    printf("divento enorme allocando 1 milione di interi (4MiB)!!!\n");
     int* array = (int*)sbrk(1000000*sizeof(int));
     array[500] = 2;
     // coredump();

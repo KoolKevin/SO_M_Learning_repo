@@ -96,6 +96,7 @@ int get_freemem() {
 
   // lock necessario per evitare situazioni in
   // cui la freelist è nel mezzo di un aggiornamento
+  // che mi scombina i puntatori a next
   acquire(&kmem.lock);  
 
   while (r != NULL) {
@@ -105,9 +106,6 @@ int get_freemem() {
     
   release(&kmem.lock);
 
-  
-
-
   return num_pagine;
 }
 
@@ -116,19 +114,35 @@ int get_freemem() {
 
 
 
-// bruttura per non dover fare troppi refactoring 
-int inizializzazione;
 
 void
 kinit()
 {
-  inizializzazione = 1;
   initlock(&kmem.lock, "kmem");
   page_ref_table_init(); // inizializzo anche questo
   freerange(end, (void*)PHYSTOP);
-  inizializzazione = 0;
 }
 
+// la vecchia kfree diventa kfree_init dato che
+// devo distinguere quando sto costruendo la freelist
+// da quando sto effettivamente liberando della memoria 
+// precedentemente allocata (necessità di aggiornare 
+// la tabella dei riferimenti)
+void kfree_init(void *pa) {
+ struct run *r;
+
+  if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
+    panic("kfree_init");
+
+  r = (struct run*)pa;
+
+  acquire(&kmem.lock);
+  // Fill with junk to catch dangling refs.
+  memset(pa, 1, PGSIZE);
+  r->next = kmem.freelist;
+  kmem.freelist = r;
+  release(&kmem.lock);
+}
 
 void
 freerange(void *pa_start, void *pa_end)
@@ -136,7 +150,7 @@ freerange(void *pa_start, void *pa_end)
   char *p;
   p = (char*)PGROUNDUP((uint64)pa_start);
   for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
-    kfree(p);
+    kfree_init(p);
 }
 
 // Free the page of physical memory pointed at by pa,
@@ -151,50 +165,26 @@ kfree(void *pa)
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
 
-  /*
-      KKoltraka
-      Le 5 righe qua sotto, sono una maniera un po' contorta per creare una lista linkata delle pagine libere
-      che però parte dall'ultima pagina in memoria. La variabile che rappresenta questa lista è kmem.freelist.
-        - Alla prima chiamata di kfree() abbiamo che kmem.freelist punta all'unica pagina che abbiamo appena liberato 
-          mentre kmem.freelist.next punta a NULL
-        - Alle invocazioni successive kmem.freelist puntarà alla pagina "più alta" libera, mentre kmem.freelist.next
-          punterà alla pagina immediatamente sotto fino a raggiungere di nuovo NULL
-
-      NB: i puntatori alle pagina puntano al primo indirizzo della pagina, sono presenti quindi altri 4095 indirizzi 
-      NB_2: è interessante anche il fatto che in un certo senso la memoria considerata "libera" in realtà stia venendo
-      utilizzata come una struttura dati! Attraverso il cast a (struct run*) diventa possibile assegnare ai primi 8 byte
-      di ogni pagina libera l'indirizzo della prossima pagina libera. In sostanza ogni pagina libera diventa un nodo della
-      lista linkata delle pagine libere. NON C'È STATO BISOGNO DI USARE DELLA MEMORIA A PARTE PER TENERE TRACCIA DELLE
-       PAGINE LIBERE.  
-  */
   r = (struct run*)pa;
 
   int index = ((uint64)pa - PGROUNDUP((uint64)end)) / PGSIZE;
   acquire(&kmem.lock);
-  // decremento i riferimenti della pagina (se non sto venendo chiamato da kinit())
-  if(!inizializzazione) {
-    if(page_ref_table.page_refs[index].pa == (uint64)pa) {
-      decrease_physical_page_refs((uint64)pa);
-      
-      // se la pagina non è più riferita, la posso liberare    
-      if(get_physical_page_refs((uint64)pa) == 0) {
-        // Fill with junk to catch dangling refs.
-        memset(pa, 1, PGSIZE);
-        r->next = kmem.freelist;
-        kmem.freelist = r;
-      }
-    }
-    else {
-      printf("non ho trovato pa=0x%lx nel posto in cui mi aspettavo nella tabella\n", (uint64)pa);
-      panic("panico");
+
+  // decremento i riferimenti della pagina
+  if(page_ref_table.page_refs[index].pa == (uint64)pa) {
+    decrease_physical_page_refs((uint64)pa);
+    
+    // se la pagina non è più riferita, la posso liberare    
+    if(get_physical_page_refs((uint64)pa) == 0) {
+      // Fill with junk to catch dangling refs.
+      memset(pa, 1, PGSIZE);
+      r->next = kmem.freelist;
+      kmem.freelist = r;
     }
   }
-  // se provengo da kinit() devo solo costruire la lista delle pagine libere 
   else {
-    // Fill with junk to catch dangling refs.
-    memset(pa, 1, PGSIZE);
-    r->next = kmem.freelist;
-    kmem.freelist = r;
+    printf("non ho trovato pa=0x%lx nel posto in cui mi aspettavo nella tabella\n", (uint64)pa);
+    panic("panico");
   }
 
   release(&kmem.lock);
