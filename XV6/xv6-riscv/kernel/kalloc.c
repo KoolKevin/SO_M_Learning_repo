@@ -38,6 +38,7 @@ struct page_ref_t {
 struct page_ref_table_t {
   struct page_ref_t page_refs[(PHYSTOP-KERNBASE)/PGSIZE]; // sto largo con la dimensione per semplicità
   int dim;
+  struct spinlock lock;
 };
 
 struct page_ref_table_t page_ref_table;
@@ -46,7 +47,6 @@ void page_ref_table_init() {
   page_ref_table.dim=0;
 
   char *p = (char*)PGROUNDUP((uint64)end);
-  
   for(; p + PGSIZE <= (char*)PHYSTOP; p += PGSIZE) {
     page_ref_table.page_refs[page_ref_table.dim].pa = (uint64)p;
     page_ref_table.page_refs[page_ref_table.dim].count = 0;
@@ -65,7 +65,10 @@ void increase_physical_page_refs(uint64 pa) {
   pa = PGROUNDDOWN(pa);
   int index = (pa - PGROUNDUP((uint64)end)) / PGSIZE;
 
+  // lock per evitare di perdere un incremento durante una corsa critica
+  acquire(&page_ref_table.lock);
   page_ref_table.page_refs[index].count++;
+  release(&page_ref_table.lock);
 
   // #ifdef DEBUG_COW
   // printf("incremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[index].count, (uint64)kmem.freelist);
@@ -76,7 +79,10 @@ void decrease_physical_page_refs(uint64 pa) {
   pa = PGROUNDDOWN(pa);
   int index = (pa - PGROUNDUP((uint64)end)) / PGSIZE;
 
+  // lock per evitare di perdere un decremento durante una corsa critica
+  acquire(&page_ref_table.lock);
   page_ref_table.page_refs[index].count--;
+  release(&page_ref_table.lock);
 
   // #ifdef DEBUG_COW
   // printf("decremento a %d i riferimenti alla pagina: 0x%lx\n", page_ref_table.page_refs[index].count, (uint64)pa);
@@ -84,7 +90,26 @@ void decrease_physical_page_refs(uint64 pa) {
 }
 
 
+int get_freemem() {
+  int num_pagine = 0;
+  struct run *r = kmem.freelist;
 
+  // lock necessario per evitare situazioni in
+  // cui la freelist è nel mezzo di un aggiornamento
+  acquire(&kmem.lock);  
+
+  while (r != NULL) {
+    num_pagine++;
+    r = r->next;
+  }
+    
+  release(&kmem.lock);
+
+  
+
+
+  return num_pagine;
+}
 
 
 

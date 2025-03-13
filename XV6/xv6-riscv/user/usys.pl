@@ -45,3 +45,4 @@ entry("fork_cow");
 entry("coredump");
 entry("set_priority");
 entry("set_child_priority");
+entry("freemem");

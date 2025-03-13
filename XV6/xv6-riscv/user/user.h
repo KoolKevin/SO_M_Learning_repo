@@ -31,6 +31,7 @@ int fork_cow(void);
 int coredump(void);
 int set_priority(int);
 int set_child_priority(int);
+int freemem(void);
 
 // ulib.c
 int stat(const char*, struct stat*);

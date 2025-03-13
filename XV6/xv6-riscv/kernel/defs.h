@@ -66,6 +66,7 @@ void            kinit(void);
 int             get_physical_page_refs(uint64); // aggiunto da me
 void            increase_physical_page_refs(uint64); // aggiunto da me
 void            decrease_physical_page_refs(uint64); // aggiunto da me
+int             get_freemem(); // aggiunto da me
 
 // log.c
 void            initlog(int, struct superblock*);
@@ -197,5 +198,5 @@ void            virtio_disk_intr(void);
 
 #define NULL ((void*)0)
 
-#define DEBUG_COW 1
+// #define DEBUG_COW 1
 // #define DEBUG_PRIO 1

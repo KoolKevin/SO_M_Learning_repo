@@ -165,6 +165,11 @@ uint64 sys_set_child_priority(void) {
   return 0;
 }
 
+// TODO: implementa
+uint64 sys_freemem(void) {
+  return get_freemem();
+}
+
 /*
   sintassi che non conoscevo, a quanto pare in C si può inizializzare un array 
   anche specificando tra quadre l'indice del valore
@@ -202,6 +207,7 @@ static uint64 (*syscalls[])(void) = {
 [SYS_coredump] sys_coredump,
 [SYS_set_priority]sys_set_priority,
 [SYS_set_child_priority]sys_set_child_priority,
+[SYS_freemem]sys_freemem,
 };
 
 void

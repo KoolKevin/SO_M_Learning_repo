@@ -143,6 +143,7 @@ UPROGS=\
 	$U/_wc\
 	$U/_zombie\
 	$U/_test_priority\
+	$U/_debug_fork_cow\
 	$U/_test_fork_cow\
 	$U/_my_hello 	# aggiunto
 

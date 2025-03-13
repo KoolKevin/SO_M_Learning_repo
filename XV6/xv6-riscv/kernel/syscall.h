@@ -29,3 +29,4 @@
 #define SYS_coredump  27
 #define SYS_set_priority 28
 #define SYS_set_child_priority 29
+#define SYS_freemem 30
