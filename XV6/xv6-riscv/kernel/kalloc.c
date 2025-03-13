@@ -92,18 +92,19 @@ void decrease_physical_page_refs(uint64 pa) {
 
 int get_freemem() {
   int num_pagine = 0;
-  struct run *r = kmem.freelist;
-
+  
   // lock necessario per evitare situazioni in
-  // cui la freelist è nel mezzo di un aggiornamento
-  // che mi scombina i puntatori a next
+  // cui recupero il nodo in cima alla freelist
+  // appena prima di una kalloc (con successiva
+  // modifica al puntatore next) che mi porterebbe 
+  // ad accedere memoria casuale
   acquire(&kmem.lock);  
+  struct run *r = kmem.freelist;
 
   while (r != NULL) {
     num_pagine++;
     r = r->next;
   }
-    
   release(&kmem.lock);
 
   return num_pagine;
