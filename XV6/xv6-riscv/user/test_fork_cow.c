@@ -11,7 +11,7 @@ int main() {
     printf("divento enorme allocando 1 milione di interi (4MiB)!!!");
     int* array = (int*)sbrk(1000000*sizeof(int));
     array[500] = 2;
-    coredump();
+    // coredump();
 
     free_pages = freemem();
     free_mem = (free_pages*4096)/(1024*1024);
