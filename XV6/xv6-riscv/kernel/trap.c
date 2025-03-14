@@ -265,7 +265,8 @@ clockintr()
   // ask for the next timer interrupt. this also clears
   // the interrupt request. 1000000 is about a tenth
   // of a second.
-  w_stimecmp(r_time() + 1000);
+  int quanto_di_tempo = 1000000;
+  w_stimecmp(r_time() + quanto_di_tempo);
 }
 
 // check if it's an external interrupt or software interrupt,

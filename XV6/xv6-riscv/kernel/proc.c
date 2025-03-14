@@ -22,7 +22,7 @@ struct ready_queue code_processi_pronti[NUM_PRIO];
 
 void enqueue(struct ready_queue *coda, struct proc *proc) {
   #ifdef DEBUG_PRIO
-  printf("\t\taggiungo pid=%d alla coda con priorità %d\n", proc->pid, coda->priority_level);
+  printf("\t\t[enqueue] aggiungo pid=%d alla coda con priorità %d\n", proc->pid, coda->priority_level);
   #endif
 
   proc->next_ready_proc = NULL;  // per sicurezza
@@ -33,7 +33,7 @@ void enqueue(struct ready_queue *coda, struct proc *proc) {
   if(coda->ultimo == NULL) {
     coda->primo = proc;
     #ifdef DEBUG_PRIO
-    printf("\t\tla coda %d era vuota\n", coda->priority_level);
+    printf("\t\t[enqueue] la coda %d era vuota\n", coda->priority_level);
     #endif
   }
   // altrimenti, prima di sostituire l'ex-ultimo
@@ -41,7 +41,7 @@ void enqueue(struct ready_queue *coda, struct proc *proc) {
   else {
     coda->ultimo->next_ready_proc = proc;
     #ifdef DEBUG_PRIO
-    printf("\t\tla coda NON era vuota\n");
+    printf("\t\t[enqueue] la coda NON era vuota\n");
     #endif
   }
   
@@ -54,9 +54,9 @@ struct proc* dequeue(struct ready_queue *coda) {
   acquire(&coda->lock);
 
   if (coda->primo == NULL) {
-    #ifdef DEBUG_PRIO
-    printf("\t\tla coda con priorità %d era vuota\n", coda->priority_level);
-    #endif
+    // #ifdef DEBUG_PRIO
+    // printf("\t\t[dequeue] la coda con priorità %d era vuota\n", coda->priority_level);
+    // #endif
     release(&coda->lock);
 
     return NULL;  
@@ -65,7 +65,7 @@ struct proc* dequeue(struct ready_queue *coda) {
   struct proc *proc = coda->primo;
 
   #ifdef DEBUG_PRIO
-  printf("\t\trecupero pid=%d dalla coda con priorità %d\n", proc->pid, coda->priority_level);
+  printf("\t\t[dequeue] recupero pid=%d dalla coda con priorità %d\n", proc->pid, coda->priority_level);
   #endif
   
   // se la coda contiene solo un elemento
@@ -73,12 +73,12 @@ struct proc* dequeue(struct ready_queue *coda) {
     coda->primo = NULL;
     coda->ultimo = NULL;
     #ifdef DEBUG_PRIO
-    printf("\t\tla coda %d aveva solo pid=%d, ora è vuota\n", coda->priority_level, proc->pid);
+    printf("\t\t[dequeue] la coda %d aveva solo pid=%d, ora è vuota\n", coda->priority_level, proc->pid);
     #endif
   }
   else {
     #ifdef DEBUG_PRIO
-    printf("\t\tpid=%d ora è davanti alla coda %d\n", coda->primo->next_ready_proc->pid, coda->priority_level);
+    printf("\t\t[dequeue] pid=%d ora è davanti alla coda %d\n", coda->primo->next_ready_proc->pid, coda->priority_level);
     #endif
     coda->primo = proc->next_ready_proc;
   }
@@ -728,10 +728,6 @@ scheduler(void)
     }
     // nothing to run; stop running on this core until a (timer) interrupt.
     else {
-      #ifdef DEBUG_PRIO
-      printf("NON TROVATO\n\n");
-      #endif
-
       // non sembra star bloccando troppo e non è colpa di 
       // una implementazione errata dello scheduler, hai già
       // controllato anche con la versione round-robin
@@ -983,7 +979,7 @@ procdump(int dump_core)
   char *state;
 
   acquire(&wait_lock);
-  printf("\n\n-------- DUMP DEI PROCESSI --------\n\n");
+  printf("\n-------- DUMP DEI PROCESSI --------\n");
   for(p = proc; p < &proc[NPROC]; p++){
     if(p->state == UNUSED)
       continue;
@@ -999,5 +995,6 @@ procdump(int dump_core)
       coredump(p->pagetable, p->sz);
     }
   }
+  printf("\n");
   release(&wait_lock);
 }

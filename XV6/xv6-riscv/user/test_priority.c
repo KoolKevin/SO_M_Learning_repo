@@ -12,28 +12,36 @@ int main() {
 
     set_child_priority(3);
     if(fork() == 0) {
-        printf("sono il figlio 3\n");
+        printf("\nSONO IL FIGLIO CON PRIORITà 3!");
         procdump(0);
         return 0;
     } 
 
     set_child_priority(2);
     if(fork() == 0) {
-        printf("sono il figlio 2\n");
+        printf("\nSONO IL FIGLIO CON PRIORITà 2!");
         procdump(0);
         return 0;
     } 
 
     set_child_priority(1);
     if(fork() == 0) {
-        printf("sono il figlio 1\n");
+        printf("\nSONO IL FIGLIO CON PRIORITà 1!");
         procdump(0);
         return 0;
     } 
 
-    printf("sono il padre\n");
+
+    printf("[PADRE] stato iniziale");
     procdump(0);
     interrupt_on();
+    
+    int pid, status;
+    for(int i=0; i<3; i++) {
+        pid = wait(&status);
+        printf("[PADRE]: ho aspettato %d -> status: %d\n", pid, status);
+    }
+    
     
     return 0;
 }

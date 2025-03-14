@@ -8,8 +8,8 @@ int main() {
     int free_mem = (free_pages*4096)/(1024*1024); // la CPU corrente non supporta float
     printf("attualmente ci sono %d pagine libere, corrispondenti a %d MiB\n", free_pages, free_mem);
 
-    printf("divento enorme allocando 1 milione di interi (4MiB)!!!\n");
-    int* array = (int*)sbrk(1000000*sizeof(int));
+    printf("divento enorme allocando 10 milione di interi (40MiB)!!!\n");
+    int* array = (int*)sbrk(10000000*sizeof(int));
     array[500] = 2;
     // coredump();
 
@@ -28,8 +28,10 @@ int main() {
     pid=fork();
     
     if(pid == 0) {
-        sleep(2);
-        exit(0);
+        sleep(20); // 2 secondi
+        char *argv[] = { "echo", "[FIGLIO] ho eseguito exec! Della memoria di mio padre non me ne faccio niente!\n", 0 };
+        exec("echo", argv);
+        exit(-1);
     } 
     else {
         elapsed = uptime() - start;
@@ -52,8 +54,10 @@ int main() {
     pid=fork_cow();
     
     if(pid == 0) {
-        sleep(2);
-        exit(0);
+        sleep(20); // 2 secondi
+        char *argv[] = { "echo", "[FIGLIO] ho eseguito exec! Della memoria di mio padre non me ne faccio niente!\n", 0 };
+        exec("echo", argv);
+        exit(-1);
     } 
     else {
         elapsed = uptime() - start;
@@ -66,6 +70,8 @@ int main() {
         pid = wait(&status);
         printf("[PADRE]: ho aspettato %d -> status: %d\n", pid, status);
     }
+
+    printf("\n");
 
     return 0;
 }

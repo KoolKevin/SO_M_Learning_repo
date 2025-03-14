@@ -116,7 +116,7 @@ uint64 sys_interrupt_on() {
 
 uint64 sys_interrupt_off() {
   intr_off();
-  printf("------ INTERRUPT DISABILITATI----\n");
+  printf("------ INTERRUPT DISABILITATI! ------\n");
   return 0;
 }
 
