@@ -232,7 +232,7 @@ kerneltrap()
   if(intr_get() != 0)  // kkoltraka: ricorda che l'HW resetta questo bit automaticamente ad ogni trap
     panic("kerneltrap: interrupts enabled");
 
-  // kkoltraka: gestisco solo gli interrupt dato che dal
+  // kkoltraka: gestisco solo gli interrupt dato che dal kernel:
   // - non ha senso invocare system call
   // - si assume che non vengano generate eccezioni
   if((which_dev = devintr()) == 0){
