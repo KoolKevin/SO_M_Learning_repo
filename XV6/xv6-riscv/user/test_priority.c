@@ -31,13 +31,18 @@ int main() {
         return 0;
     } 
 
+    if(fork() == 0) {
+        printf("\nSONO IL SECONDO FIGLIO CON PRIORITà 1!");
+        procdump(0);
+        return 0;
+    } 
 
     printf("[PADRE] stato iniziale");
     procdump(0);
     interrupt_on();
     
     int pid, status;
-    for(int i=0; i<3; i++) {
+    for(int i=0; i<4; i++) {
         pid = wait(&status);
         printf("[PADRE]: ho aspettato %d -> status: %d\n", pid, status);
     }
