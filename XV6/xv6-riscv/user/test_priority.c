@@ -11,27 +11,27 @@ int main() {
     interrupt_off(); // disabilito per evitare la preemption
 
     set_child_priority(3);
-    if(fork() == 0) {
+    if(fork_cow() == 0) {
         printf("\nSONO IL FIGLIO CON PRIORITà 3!");
         procdump(0);
         return 0;
     } 
 
     set_child_priority(2);
-    if(fork() == 0) {
+    if(fork_cow() == 0) {
         printf("\nSONO IL FIGLIO CON PRIORITà 2!");
         procdump(0);
         return 0;
     } 
 
     set_child_priority(1);
-    if(fork() == 0) {
+    if(fork_cow() == 0) {
         printf("\nSONO IL FIGLIO CON PRIORITà 1!");
         procdump(0);
         return 0;
     } 
 
-    if(fork() == 0) {
+    if(fork_cow() == 0) {
         printf("\nSONO IL SECONDO FIGLIO CON PRIORITà 1!");
         procdump(0);
         return 0;
