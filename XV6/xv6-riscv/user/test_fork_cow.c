@@ -3,25 +3,23 @@
 
 // int global_var = 10;
 
-int main() {
+void print_free_pages() {
     int free_pages = freemem();
     int free_mem = (free_pages*4096)/(1024*1024); // la CPU corrente non supporta float
-    printf("attualmente ci sono %d pagine libere, corrispondenti a %d MiB\n", free_pages, free_mem);
+    printf("\tattualmente ci sono %d pagine libere, corrispondenti a %d MiB\n", free_pages, free_mem);
+}
 
-    printf("divento enorme allocando 10 milione di interi (40MiB)!!!\n");
-    int* array = (int*)sbrk(10000000*sizeof(int));
+int main() {
+    int status, pid, start, elapsed;
+
+    print_free_pages();
+
+    printf("divento enorme allocando 10k pagine (40MiB)!!!\n");
+    int* array = (int*)sbrk(10*1024*1024*sizeof(int));
     array[500] = 2;
     // coredump();
 
-    free_pages = freemem();
-    free_mem = (free_pages*4096)/(1024*1024);
-    printf("attualmente ci sono %d pagine libere, corrispondenti a %d MiB\n", free_pages, free_mem);
-
-
-
-    int status, pid, start, elapsed;
-
-
+    print_free_pages();
 
     printf("\n----- FORK -----\n");
     start = uptime();
@@ -35,14 +33,12 @@ int main() {
     } 
     else {
         elapsed = uptime() - start;
-
-        free_pages = freemem();
-        free_mem = (free_pages*4096)/(1024*1024);
-        printf("attualmente ci sono %d pagine libere, corrispondenti a %d MiB\n", free_pages, free_mem);
+        print_free_pages();
         printf("la fork ci ha messo %d tick a ritornare\n", elapsed);
 
         pid = wait(&status);
         printf("[PADRE]: ho aspettato %d -> status: %d\n", pid, status);
+        print_free_pages();
     }
 
 
@@ -61,14 +57,12 @@ int main() {
     } 
     else {
         elapsed = uptime() - start;
-
-        free_pages = freemem();
-        free_mem = (free_pages*4096)/(1024*1024);
-        printf("attualmente ci sono %d pagine libere, corrispondenti a %d MiB\n", free_pages, free_mem);
+        print_free_pages();
         printf("la fork_cow ci ha messo %d tick a ritornare\n", elapsed);
 
         pid = wait(&status);
         printf("[PADRE]: ho aspettato %d -> status: %d\n", pid, status);
+        print_free_pages();
     }
 
     printf("\n");
