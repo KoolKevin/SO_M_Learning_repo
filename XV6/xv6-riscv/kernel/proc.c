@@ -470,10 +470,6 @@ int fork_cow(void) {
   struct proc *np;
   struct proc *p = myproc();
 
-  #ifdef DEBUG_COW
-  printf("\n----- FORK_COW ESEGUITA -----\n\n\n");
-  #endif
-
   // Allocate process.
   if((np = allocproc()) == 0){
     return -1;

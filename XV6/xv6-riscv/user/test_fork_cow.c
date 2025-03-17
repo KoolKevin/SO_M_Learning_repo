@@ -14,19 +14,18 @@ int main() {
 
     print_free_pages();
 
-    printf("divento enorme allocando 10k pagine (40MiB)!!!\n");
-    int* array = (int*)sbrk(10*1024*1024*sizeof(int));
+    printf("alloco 1000 pagine (4MiB)!\n");
+    int* array = (int*)sbrk(1000*4096);
     array[500] = 2;
     // coredump();
-
     print_free_pages();
 
     printf("\n----- FORK -----\n");
     start = uptime();
     pid=fork();
-    
+    // elapsed = uptime() - start;
     if(pid == 0) {
-        sleep(20); // 2 secondi
+        sleep(20); // ~2 secondi
         char *argv[] = { "echo", "[FIGLIO] ho eseguito exec! Della memoria di mio padre non me ne faccio niente!\n", 0 };
         exec("echo", argv);
         exit(-1);
@@ -48,7 +47,7 @@ int main() {
     printf("\n----- FORK_COW -----\n");
     start = uptime();
     pid=fork_cow();
-    
+    // elapsed = uptime() - start;
     if(pid == 0) {
         sleep(20); // 2 secondi
         char *argv[] = { "echo", "[FIGLIO] ho eseguito exec! Della memoria di mio padre non me ne faccio niente!\n", 0 };
