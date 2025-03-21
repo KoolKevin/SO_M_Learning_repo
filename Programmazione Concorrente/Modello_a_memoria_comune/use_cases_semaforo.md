@@ -1,22 +1,3 @@
-### Proprietà che un programma che fa uso di semafori rispetta sempre
-Dato un semaforo S, siano:
-- vals: valore dell’intero non negativo associato al semaforo;
-- Is: valore intero≥0 con cui il semaforo s viene inizializzato;
-- nvs: numero di volte che l’operazione V(s) è stata eseguita;
-- nps: numero di volte che l’operazione P(s) è stata completata.
-Allora:
-
-    Relazione di invarianza: in qualunque istante nps è sempre <= di is + nvs
-        -> proprietà safety (sempre vera)
-
-Possiamo sfruttare questa relazione per dimostrare formalmente le proprietà dei programmi concorrenti che usano i semafori
-
-IL SEMAFORO NON é UNO STRUMENTO UTILIZZATO SOLAMENTE PER LA MUTUA ESCLUSIONE (STRUMENTO GENERALE PER QUALSIASI ESIGENZA DI SINCRONIZZAZIONE)
-
-Dimostrazione della mutua esclusione
-...
-c) questo requisito dice in un altro modo che non si può stabilire un ordine di accesso alla sezione critica
-
 ## VARI TEMPLATE PER L'UTILIZZO DI SEMAFORI
 
 __NB__: in generale l'accesso al gestore va reso mutamente esclusivo, uso di semaforo mutex
