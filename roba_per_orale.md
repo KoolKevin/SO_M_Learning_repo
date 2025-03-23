@@ -168,3 +168,18 @@ Durante l’esecuzione delle istruzioni I1,..In i task C e S rimangono sincroniz
 
 **Select**
 Anche in ADA c'è il problema di far esporre più servizi ad un unico task server. Come sempre la soluzione è un comando con guardia "_select_" che ha praticamente la stessa semantica di GO se non per la sincronizzazione estesa. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Algoritmi di sincronizzazione distribuiti
