@@ -181,5 +181,3 @@ Anche in ADA c'è il problema di far esporre più servizi ad un unico task serve
 
 
 
-
-## Algoritmi di sincronizzazione distribuiti
