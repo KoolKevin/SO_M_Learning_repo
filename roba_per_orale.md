@@ -181,3 +181,61 @@ Anche in ADA c'è il problema di far esporre più servizi ad un unico task serve
 
 
 
+## HPC
+
+### Modello Von Neumann esteso
+Il modello di Von Neumann descrive lo schema funzionale di un tradizionale sistema **sequenziale**.
+- L’unica CPU è collegata alla memoria centrale (che contiene dati e istruzioni) attraverso un bus
+- La **separazione tra memoria e CPU** costituisce una limitazione nella velocità di accesso a dati e istruzioni e quindi di esecuzione
+    - Von Neumann bottleneck
+    - la velocità di fetching di istruzioni e dati dipende dalla velocità di trasmissione del Bus
+    - Questa limitazione influisce sulla velocità di elaborazione del sistema
+
+Per mitigare questo problema, il modello di Von Neumann è stato esteso con l’introduzione di:
+- Memorie Cache
+- Instruction Level Parallelism (ILP)
+    - pipelining: eseguo fasi diverse di istruzioni diverse in parallelo
+    - superscalarità: ho più unità funzionali per la stassa fase e quindi posso eseguire in parallelo più istruzioni
+    - tecniche che possono essere combinate (pipeline multiple)
+    - L’efficacia di tecniche ILP può ridursi nel caso di **dipendenze tra istruzioni**: non posso eseguire istruzioni dipendenti in parallelo dato che per eseguire una ho bisogno del risultato di un'altra
+- **Hardware multithreading**
+    - In aggiunta a ILP, i processori moderni offrono parallelismo a livello di thread (thread level parallelism) mediante HW multithreading.
+        - ILP cerca di massimizzare l’uso delle risorse del processore eseguendo più istruzioni in parallelo all’interno dello stesso thread, ma è limitato da dipendenze tra istruzioni e dalla complessità di predizione dei branch.
+        - Multithreading entra in gioco quando l’ILP non basta: invece di cercare di eseguire più istruzioni dello stesso thread, ne esegue di diversi.
+
+### Hardware Multithreading (Hyperthreading)
+Obiettivo: ridurre i tempi di inattività della CPU
+
+Un processore può rimanere inattivo a causa di eventi come:
+- Dipendenze tra istruzioni (hazard strutturali, di dati o di controllo)
+- Attese di memoria (cache miss, accessi alla RAM)
+- Stalli della pipeline (vedi branch, ...)
+
+**NB**: ILP non colma questi stalli.
+
+Il multithreading consente di riempire questi tempi morti eseguendo istruzioni di un altro thread, permettendo di mantenere occupate le unità di esecuzione.
+- idea analoga a quella della multiprogrammazione, quando un processo si sospende in attesa di I/O, quest'ultimo si sospendo e lo scheduler ne fa subentrare un altro che può utilizzare la CPU
+- qua siamo più a basso livello e consideriamo come riempire gli stalli 
+
+**Come funziona?**
+In sostanza si tengono allocati più thread su un singolo core/processore contemporaneamente (multiplexing)
+- abbiamo due batterie di registri (caso di 2 livelli di multithreading) nella singola CPU/core, ognuna associata ad uno dei due thread assegnati alla CPU in quel momento.
+    - le due batterie di registri mantengono la stato di esecuzione del thread a cui sono associate
+    - l'hardware considererà queste due batterie una per volta, in base al thread che sta eseguendo in un dato momento
+- di fronte ad uno stallo si attiverà un meccanismo HW che implementa il context switch tra un thread a un altro in modo molto efficiente
+    - questo tipo di cambio di contesto è molto più leggero rispetto a quello software, siccome non bisogna andare a recuperare i registri del processo a cui si sta switchando (accessi alla memoria) e non bisogna eseguire alcuna load/store. Il contesto in cui switchare è gia presente in una delle batterie di registri.
+- in questa maniera lo stallo è mascherato e la CPU/core continua ad eseguire
+
+Due approcci al Hyperthreading:
+- **Multithreading a grana fine**: viene eseguito un context switch dopo ogni istruzione.
+    - Vantaggio: Attese (lunghe o brevi) di thread vengono «nascoste» allocando la CPU ad altri thread.
+    - **NB**: purchè questo funzioni dobbiamo avere un numero sufficiente di thread (e quindi di batterie di registri) disponibili da mandare in esecuzione: con solo due ad esempio, al primo stallo di uno l'efficienza si dimezza in quanto l'altro è costretto a mandare delle no-op.  
+    - Svantaggio: velocità di esecuzione dei thread ridotta.
+    - **in sostanza**: latenza alta, throughput elevato
+- **Multithreading a grana grossa**:  il context switch avviene quando il thread corrente è in una situazione di attesa (ad esempio: in caso di «cache miss», deve attendere il caricamento dell'informazione dalla memoria centrale).
+    - Vantaggio: meno context switch, quindi velocità media di esecuzione dei thread più alta.
+    - Svantaggio: il context switch è più costoso necessità di vuotare la pipeline in quanto prima di accorgermi dello stallo ho inserito altre istruzioni appartenenti al thread bloccato negli stadi precedenti
+        - Throughput più basso.
+    - **in sostanza**: latenza bassa, throughput minore 
+
+

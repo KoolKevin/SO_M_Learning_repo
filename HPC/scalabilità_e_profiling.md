@@ -34,8 +34,8 @@ Abbiamo già osservato che non tutto il problema può essere parallelizzabile. P
 - T(1,N) = T_seq(1,N)+ T_par(1,N)
 Successivamente:
 - T_seq(p, N) = T_seq(1, N) = T_seq
-- r = T_seq/T(1, N); frazione del tempo totale spesa nella parte non parallelizzabile
-- T_par(1, N) = (1-r)T(1, N)
+- r = T_seq/T(1, N); frazione del tempo totale spesa nella parte NON parallelizzabile
+- T_par(1, N) = (1-r)T(1, N) frazione del tempo totale spesa nella parte parallelizzabile
 
 ... varie sostituzioni ...
 
