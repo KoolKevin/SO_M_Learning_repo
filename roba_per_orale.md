@@ -1,8 +1,8 @@
 ## Realizzazione dei semafori nel nucleo | modello a memoria comune
 #### Caso monoprocessore
 - p():
-    - se n > 1 -> n--
-    - se n == 1 
+    - se n > 0 -> n--
+    - se n == 0
         - inserisco processo corrente nella coda dei processi sospesi del semaforo
         - invoco lo scheduler per effettuare un cambio di contesto verso un processo pronto
 - v():
@@ -23,7 +23,7 @@ Passaggi:
 2. Uk gestisce l’interruzione utilizzando le funzioni del nucleo: inserisce Pk nella coda dei processi pronti e mette in esecuzione il processo Pj.
 
 
-#### Caso multiprocessore | modello SMP
+#### Caso multiprocessore | modello a nuclei distinti
 Solo le interazioni tra processi appartenenti a nodi virtuali diversi utilizzano la memoria comune.
 
 Distinzione tra:
