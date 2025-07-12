@@ -170,6 +170,8 @@ ifndef CPUS
 CPUS := 3
 endif
 
+# togli dumpdtb se non vuoi il dump del device file
+# QEMUOPTS = -machine virt,dumpdtb=xv6.dtb -bios none -kernel $K/kernel -m 128M -smp $(CPUS) -nographic
 QEMUOPTS = -machine virt -bios none -kernel $K/kernel -m 128M -smp $(CPUS) -nographic
 QEMUOPTS += -global virtio-mmio.force-legacy=false
 QEMUOPTS += -drive file=fs.img,if=none,format=raw,id=x0
