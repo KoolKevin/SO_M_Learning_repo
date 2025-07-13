@@ -264,6 +264,23 @@ backcmd(struct cmd *subcmd)
 char whitespace[] = " \t\r\n\v";
 char symbols[] = "<|>&;()";
 
+// Input:
+//  - un puntatore *ps che indica dove sei arrivato a leggere nella stringa della riga di comando
+//    - (non un array di stringa ma una stringa passata per riferimento)
+//    - anche output
+//  - un puntatore es alla fine della stringa.
+
+// Output:
+//  - un carattere che dice che tipo di token è stato riconosciuto:
+//    - '|', '&', ';', '<', '>', '(', ')' – se il token è proprio quel simbolo singolo
+//    - '+' – se il token è il doppio redirezionamento >>
+//    - 'a' – se il token è una “parola” (sequenza di caratteri normali)
+//    - 0 – se hai finito la stringa
+//  - l’inizio (q) e la fine (eq) del token trovato.
+//    - (non array di stringhe ma stringhe passate per riferimento)
+
+// Durante la scansione *ps viene avanzato, così la chiamata successiva riparte dal punto giusto.
+
 int
 gettoken(char **ps, char *es, char **q, char **eq)
 {
@@ -271,41 +288,54 @@ gettoken(char **ps, char *es, char **q, char **eq)
   int ret;
 
   s = *ps;
+  // tolgo il whitespace iniziale, un carattere alla volta
   while(s < es && strchr(whitespace, *s))
     s++;
+  // q è opzionale, ed è uguale al primo carattere non whitespace trovato
   if(q)
     *q = s;
-  ret = *s;
+
+  ret = *s; // nella maggior parte dei casi posso già dire che il token è questo carattere
   switch(*s){
+  // token nullo
   case 0:
     break;
+  // token composti da un carattere
   case '|':
   case '(':
   case ')':
   case ';':
   case '&':
   case '<':
-    s++;
+    s++; // sposto il cursore dopo il token appena trovato
     break;
   case '>':
     s++;
+    // anche >> è un token (stranamento non <<)
     if(*s == '>'){
-      ret = '+';
+      ret = '+'; // token che sta ad indicare ++
       s++;
     }
     break;
   default:
-    ret = 'a';
+    ret = 'a'; // il token è una parola
+    // sposto il cursore in avanti finchè non trovo un whitespace o un simbolo
     while(s < es && !strchr(whitespace, *s) && !strchr(symbols, *s))
       s++;
     break;
   }
+
+  // eq è opzionale ed è uguale a 
   if(eq)
     *eq = s;
 
+  // tolgo il whitespace finale, un carattere alla volta
   while(s < es && strchr(whitespace, *s))
     s++;
+
+  // aggiorno fino a dove sono arrivato a processare
   *ps = s;
+
   return ret;
 }
 
@@ -334,7 +364,8 @@ parsecmd(char *s)
 
   es = s + strlen(s);
   cmd = parseline(&s, es);
-  peek(&s, es, "");
+  // tolgo il whitespace finale
+  peek(&s, es, ""); // "" == '\n'
   if(s != es){
     fprintf(2, "leftovers: %s\n", s);
     panic("syntax");
