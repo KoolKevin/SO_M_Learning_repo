@@ -292,7 +292,7 @@ uvmfirst(pagetable_t pagetable, uchar *src, uint sz)
   mem = kalloc();
   memset(mem, 0, PGSIZE);
   mappages(pagetable, 0, PGSIZE, (uint64)mem, PTE_W|PTE_R|PTE_X|PTE_U);
-  memmove(mem, src, sz);  // kkoltraka: notare direct mapping
+  memmove(mem, src, sz);  
 }
 
 // Allocate PTEs and physical memory to grow process from oldsz to

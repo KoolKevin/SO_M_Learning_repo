@@ -31,8 +31,8 @@ exec(char *path, char **argv)
   pagetable_t pagetable = 0, oldpagetable;
   struct proc *p = myproc();
 
-  begin_op();
-
+  begin_op(); // funzione per il logging FS
+  // apro il file binario
   if((ip = namei(path)) == 0){
     end_op();
     return -1;
@@ -46,11 +46,13 @@ exec(char *path, char **argv)
   if(elf.magic != ELF_MAGIC)
     goto bad;
 
+  // creo la nuova pagetable che sostituirà quella del processo che ha chiamato la exec  
   if((pagetable = proc_pagetable(p)) == 0)
     goto bad;
 
-  // Load program into memory.
+  // Load program into memory iterating over every program header.
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
+    // leggo il program header e faccio vari controlli d'errore
     if(readi(ip, 0, (uint64)&ph, off, sizeof(ph)) != sizeof(ph))
       goto bad;
     if(ph.type != ELF_PROG_LOAD)
@@ -61,10 +63,13 @@ exec(char *path, char **argv)
       goto bad;
     if(ph.vaddr % PGSIZE != 0)
       goto bad;
+    
+    // alloco e mappo pagine per i program segment descritti dal program header corrente
     uint64 sz1;
     if((sz1 = uvmalloc(pagetable, sz, ph.vaddr + ph.memsz, flags2perm(ph.flags))) == 0)
       goto bad;
     sz = sz1;
+    // carico nella pagine appena allocate e mappate i program segment
     if(loadseg(pagetable, ph.vaddr, ip, ph.off, ph.filesz) < 0)
       goto bad;
   }
@@ -156,13 +161,19 @@ loadseg(pagetable_t pagetable, uint64 va, struct inode *ip, uint offset, uint sz
   uint64 pa;
 
   for(i = 0; i < sz; i += PGSIZE){
+    // recupero l'indirizzo fisico dove iniziare a scrivere la pagina da caricare
     pa = walkaddr(pagetable, va + i);
     if(pa == 0)
       panic("loadseg: address should exist");
+    
+    // carico una pagina alla volta finchè non rimane meno di una pagina da caricare
     if(sz - i < PGSIZE)
       n = sz - i;
     else
       n = PGSIZE;
+
+    // carico la pagine in memoria leggendola dal file con l'offset giusto
+    // (uso direct mapping, vedi readi())
     if(readi(ip, 0, (uint64)pa, offset+i, n) != n)
       return -1;
   }

@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.pl": "prolog",
         "proc.h": "c",
         "defs.h": "c",
         "types.h": "c",
@@ -10,6 +11,8 @@
         "param.h": "c",
         "memlayout.h": "c",
         "riscv.h": "c",
-        "spinlock.h": "c"
+        "spinlock.h": "c",
+        "elf.h": "c",
+        "fs.h": "c"
     }
 }
