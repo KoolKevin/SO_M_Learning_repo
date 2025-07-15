@@ -181,7 +181,7 @@ usertrapret(void)
   // send syscalls, interrupts, and exceptions to uservec in trampoline.S
   /*
     TRAMPOLINE                        = indirizzo virtuale
-    trampoline e uservec              = indirizzi fisici (direct mapping) 
+    trampoline e uservec              = indirizzi fisici utilizzati dal kernel (direct mapping) 
     uservec-trampoline                = offset del codice handler all'interno del codice del trampolino
     TRAMPOLINE + (uservec-trampoline) = indirizzo virtuale effettivo dell'handler per le trap in userspace
   */
@@ -192,7 +192,7 @@ usertrapret(void)
   // the process next traps into the kernel.
   p->trapframe->kernel_satp = r_satp();         // kernel page table
   p->trapframe->kernel_sp = p->kstack + PGSIZE; // process's kernel stack
-  p->trapframe->kernel_trap = (uint64)usertrap;
+  p->trapframe->kernel_trap = (uint64)usertrap; // kernel trap handling code (where uservec jumps to)
   p->trapframe->kernel_hartid = r_tp();         // hartid for cpuid()
 
   // set up the registers that trampoline.S's sret will use
