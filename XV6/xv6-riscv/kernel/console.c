@@ -25,11 +25,9 @@
 #define BACKSPACE 0x100
 #define C(x)  ((x)-'@')  // Control-x
 
-//
 // send one character to the uart.
 // called by printf(), and to echo input characters,
 // but not from write().
-//
 void
 consputc(int c)
 {
@@ -52,9 +50,8 @@ struct {
   uint e;  // Edit index
 } cons;
 
-//
+
 // user write()s to the console go here.
-//
 int
 consolewrite(int user_src, uint64 src, int n)
 {
@@ -70,12 +67,11 @@ consolewrite(int user_src, uint64 src, int n)
   return i;
 }
 
-//
+
 // user read()s from the console go here.
 // copy (up to) a whole input line to dst.
-// user_dist indicates whether dst is a user
+// user_dst indicates whether dst is a user
 // or kernel address.
-//
 int
 consoleread(int user_dst, uint64 dst, int n)
 {
@@ -126,12 +122,11 @@ consoleread(int user_dst, uint64 dst, int n)
   return target - n;
 }
 
+// the console INPUT interrupt handler.
+// uartintr() calls this for INPUT characters.
 //
-// the console input interrupt handler.
-// uartintr() calls this for input character.
 // do erase/kill processing, append to cons.buf,
 // wake up consoleread() if a whole line has arrived.
-//
 void
 consoleintr(int c)
 {
@@ -145,21 +140,21 @@ consoleintr(int c)
     while(cons.e != cons.w &&
           cons.buf[(cons.e-1) % INPUT_BUF_SIZE] != '\n'){
       cons.e--;
-      consputc(BACKSPACE);
+      consputc(BACKSPACE); // echo sul monitor
     }
     break;
   case C('H'): // Backspace
   case '\x7f': // Delete key
     if(cons.e != cons.w){
       cons.e--;
-      consputc(BACKSPACE);
+      consputc(BACKSPACE);  // echo sul monitor
     }
     break;
   default:
     if(c != 0 && cons.e-cons.r < INPUT_BUF_SIZE){
       c = (c == '\r') ? '\n' : c;
 
-      // echo back to the user.
+      // echo sul monitor
       consputc(c);
 
       // store for consumption by consoleread().

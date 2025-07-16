@@ -103,6 +103,7 @@ filestat(struct file *f, uint64 addr)
 
 // Read from file f.
 // addr is a user virtual address.
+// Implementa sys_read
 int
 fileread(struct file *f, uint64 addr, int n)
 {
@@ -131,6 +132,7 @@ fileread(struct file *f, uint64 addr, int n)
 
 // Write to file f.
 // addr is a user virtual address.
+// Implementa sys_write
 int
 filewrite(struct file *f, uint64 addr, int n)
 {

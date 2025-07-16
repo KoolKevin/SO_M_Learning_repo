@@ -81,8 +81,8 @@ uartinit(void)
 // UART to start sending if it isn't already.
 // blocks if the output buffer is full.
 // because it may block, it can't be called
-// from interrupts; it's only suitable for use
-// by write().
+// from interrupts (perchè interrupt enable è disabilitato?);
+// it's only suitable for use by write() (system call riabilitano gli interrupt).
 void
 uartputc(int c)
 {
@@ -93,7 +93,7 @@ uartputc(int c)
       ;
   }
   while(uart_tx_w == uart_tx_r + UART_TX_BUF_SIZE){
-    // buffer is full.
+    // buffer di trasmissione is full.
     // wait for uartstart() to open up space in the buffer.
     sleep(&uart_tx_r, &uart_tx_lock);
   }
@@ -108,6 +108,9 @@ uartputc(int c)
 // use interrupts, for use by kernel printf() and
 // to echo characters. it spins waiting for the uart's
 // output register to be empty.
+//
+// sincrono con il device. Qua infatti aspetto attivamente
+// che l'UART termini di trasmettere (lento, ma non posso usare il buffer)
 void
 uartputc_sync(int c)
 {
@@ -184,7 +187,7 @@ uartintr(void)
     consoleintr(c);
   }
 
-  // send buffered characters.
+  // send buffered characters (in the transmit buffer).
   acquire(&uart_tx_lock);
   uartstart();
   release(&uart_tx_lock);
