@@ -14,6 +14,7 @@
         "spinlock.h": "c",
         "elf.h": "c",
         "fs.h": "c",
-        "stdarg.h": "c"
+        "stdarg.h": "c",
+        "stat.h": "c"
     }
 }
