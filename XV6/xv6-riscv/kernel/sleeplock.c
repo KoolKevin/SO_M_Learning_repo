@@ -19,7 +19,9 @@ initsleeplock(struct sleeplock *lk, char *name)
 }
 
 
-// nota che non c'è nessun push_off() che mi disabilita gli interrupt
+// nota che il push_off() dentro ad acquire viene controbilanciato
+// dalla sleep 
+// -> gli sleeplock non disabilitano (per lunghi periodi) gli interrupt
 // -> gli sleeplock permettono gli yield
 void
 acquiresleep(struct sleeplock *lk)

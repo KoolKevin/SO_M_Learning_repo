@@ -553,7 +553,7 @@ reparent(struct proc *p)
   for(pp = proc; pp < &proc[NPROC]; pp++){
     if(pp->parent == p){
       pp->parent = initproc;
-      wakeup(initproc);
+      wakeup(initproc); // initproc fa una wait e quindi chiama sleep sul suo descrittore
     }
   }
 }
@@ -589,6 +589,8 @@ exit(int status)
   reparent(p);
 
   // Parent might be sleeping in wait().
+  // if not right now it will notice the exited child
+  // thanks to the zombie state
   wakeup(p->parent);
   
   acquire(&p->lock);
@@ -832,7 +834,7 @@ sleep(void *chan, struct spinlock *lk)
   release(lk);
 
   // Go to sleep.
-  p->chan = chan;
+  p->chan = chan; // record the sleep channel for wakeup()
   p->state = SLEEPING;
   // kkoltraka: p->lock verrà rilasciato solo in scheduler() 
   // una volta che il processo sarà effettivamente stato sospeso
@@ -895,10 +897,19 @@ kill(int pid)
     if(p->pid == pid){
       p->killed = 1;
       if(p->state == SLEEPING){
-        // Wake process from sleep().
+        // Wake process from sleep() forzatamente.
+        //
+        // Some calls to sleep also test p->killed in the loop, and abandon the current
+        // activity if it is set. This is only done when such abandonment would be correct (vedi pipe.c).
+        // In other situations (vedi file system) prima si completano delle operazioni per lasciare uno
+        // stato coerente. 
         p->state = RUNNABLE;
+        
+        #ifdef DEBUG_PRIO
         printf("\t[kill]: inserisco pid=%d nella coda con priorità %d, dato che è stato ucciso e deve uscire\n",
                p->pid, code_processi_pronti[p->priority].priority_level);
+        #endif
+        enqueue(&code_processi_pronti[p->priority], p); // TODO: mi ero scordato di aggiungerlo? o lo devo togliere?
       }
       release(&p->lock);
       return 0;

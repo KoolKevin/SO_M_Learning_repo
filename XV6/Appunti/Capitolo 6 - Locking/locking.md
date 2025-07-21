@@ -93,7 +93,6 @@ Sometimes xv6 needs to hold a lock for a long time. For example, the file system
 1. spreco cpu-time di altre cpu che aspettano che il lock venga rilasciato
 2. spreco la cpu corrente non facendole fare nulla intanto che l'io-operation termina
 
-
 Yielding while holding a spinlock is illegal because it might lead to deadlock if a second thread then tried to acquire the spinlock: the second thread’s spinning might prevent the first thread from running and releasing the lock.
 
 Yielding while holding a lock would also violate the requirement that interrupts must be off while a spinlock is held.
