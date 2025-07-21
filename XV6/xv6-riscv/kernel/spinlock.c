@@ -21,7 +21,11 @@ initlock(struct spinlock *lk, char *name)
 void
 acquire(struct spinlock *lk)
 {
-  push_off(); // disable interrupts to avoid deadlock.
+  // disable interrupts to avoid deadlock.
+  // driver interrupt handler code can't return if locked
+  // (and can't be interrupted)
+  // vedi sezione 6.6
+  push_off(); 
   if(holding(lk))
     panic("acquire");
 
@@ -29,12 +33,17 @@ acquire(struct spinlock *lk)
   //   a5 = 1
   //   s1 = &lk->locked
   //   amoswap.w.aq a5, a5, (s1)
+  //
+  // Each iteration swaps one into lk->locked and checks the previous value; if the previous
+  // value is zero, then we’ve acquired the lock, and the swap will have set lk->locked to one.
+  // If the previous value is one, then some other CPU holds the lock, and the fact that we
+  // atomically swapped one into lk->locked didn’t change its value
   while(__sync_lock_test_and_set(&lk->locked, 1) != 0)
     ;
 
   // Tell the C compiler and the processor to not move loads or stores
-  // past this point, to ensure that the critical section's memory
-  // references happen strictly after the lock is acquired.
+  // past this point, to ensure that the CRITICAL SECTION'S memory
+  // references happen strictly AFTER the lock is acquired.
   // On RISC-V, this emits a fence instruction.
   __sync_synchronize();
 
@@ -52,17 +61,19 @@ release(struct spinlock *lk)
   lk->cpu = 0;
 
   // Tell the C compiler and the CPU to not move loads or stores
-  // past this point, to ensure that all the stores in the critical
-  // section are visible to other CPUs before the lock is released,
+  // past this point, to ensure that all the stores in the CRITICAL
+  // SECTION are visible to other CPUs before the lock is released,
   // and that loads in the critical section occur strictly before
   // the lock is released.
   // On RISC-V, this emits a fence instruction.
   __sync_synchronize();
 
-  // Release the lock, equivalent to lk->locked = 0.
+  // Release the lock --> equivalent to lk->locked = 0.
+  //
   // This code doesn't use a C assignment, since the C standard
   // implies that an assignment might be implemented with
   // multiple store instructions.
+  //
   // On RISC-V, sync_lock_release turns into an atomic swap:
   //   s1 = &lk->locked
   //   amoswap.w zero, zero, (s1)

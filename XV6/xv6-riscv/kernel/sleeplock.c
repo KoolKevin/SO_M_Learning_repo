@@ -18,11 +18,16 @@ initsleeplock(struct sleeplock *lk, char *name)
   lk->pid = 0;
 }
 
+
+// nota che non c'è nessun push_off() che mi disabilita gli interrupt
+// -> gli sleeplock permettono gli yield
 void
 acquiresleep(struct sleeplock *lk)
 {
   acquire(&lk->lk);
   while (lk->locked) {
+    // suspend the the thread if the sleeplock is held
+    // sleep releases the spinlock!
     sleep(lk, &lk->lk);
   }
   lk->locked = 1;
