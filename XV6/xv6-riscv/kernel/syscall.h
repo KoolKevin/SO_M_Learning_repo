@@ -21,12 +21,16 @@
 #define SYS_mkdir  20
 #define SYS_close  21
 // kkoltraka numeri delle mie system call
-#define SYS_hello     22
-#define SYS_interrupt_on   23
-#define SYS_interrupt_off  24
-#define SYS_procdump  25
-#define SYS_fork_cow  26
-#define SYS_coredump  27
-#define SYS_set_priority 28
-#define SYS_set_child_priority 29
-#define SYS_freemem 30
+#define SYS_hello               22
+#define SYS_interrupt_on        23
+#define SYS_interrupt_off       24
+#define SYS_procdump            25
+#define SYS_fork_cow            26
+#define SYS_coredump            27
+#define SYS_set_priority        28
+#define SYS_set_child_priority  29
+#define SYS_freemem             30
+#define SYS_acquire_sem         31
+#define SYS_release_sem         32
+#define SYS_p                   33
+#define SYS_v                   34

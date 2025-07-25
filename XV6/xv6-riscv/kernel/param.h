@@ -14,3 +14,6 @@
 #define MAXPATH      128   // maximum file path name
 #define USERSTACK    1     // user stack pages
 
+// aggiunti da me
+#define NUM_PRIO     8         // numero di livelli di priorità di un processo (= numero di ready queue)
+#define NUM_SEM      (NPROC/2) // numero di semafori allocabili 

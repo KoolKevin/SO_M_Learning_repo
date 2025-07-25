@@ -32,6 +32,10 @@ int coredump(void);
 int set_priority(int);
 int set_child_priority(int);
 int freemem(void);
+int acquire_sem(void);
+void release_sem(int);
+int p(int);
+int v(int);
 
 // ulib.c
 int stat(const char*, struct stat*);

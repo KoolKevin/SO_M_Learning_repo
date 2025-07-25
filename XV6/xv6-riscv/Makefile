@@ -1,6 +1,9 @@
 K=kernel
 U=user
 
+# a quanto pare aggiungere un nuovo file nel kernel
+# implica aggiungere il corrispondente oggetto qua
+# (chi compila il file .c? non si sa...)
 OBJS = \
   $K/entry.o \
   $K/start.o \
@@ -28,7 +31,8 @@ OBJS = \
   $K/sysfile.o \
   $K/kernelvec.o \
   $K/plic.o \
-  $K/virtio_disk.o
+  $K/virtio_disk.o \
+  $K/sem.o # aggiunto
 
 # riscv64-unknown-elf- or riscv64-linux-gnu-
 # perhaps in /opt/riscv/bin

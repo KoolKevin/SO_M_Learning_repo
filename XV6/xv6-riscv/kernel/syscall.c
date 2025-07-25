@@ -165,10 +165,46 @@ uint64 sys_set_child_priority(void) {
   return 0;
 }
 
-// TODO: implementa
 uint64 sys_freemem(void) {
   return get_freemem();
 }
+
+
+
+uint64 sys_acquire_sem(void) {
+  uint64 sem_num = acquire_sem();
+
+  return sem_num;
+}
+
+uint64 sys_release_sem(void) {
+  int sem_num;  
+  argint(0, &sem_num);
+  
+  release_sem(sem_num);
+
+  return 0;
+}
+
+uint64 sys_v(void) {
+  int sem_num;
+  argint(0, &sem_num);
+  
+  int res = v(sem_num);
+  return res;
+}
+
+uint64 sys_p(void) {
+  int sem_num;
+  argint(0, &sem_num);
+  
+  int res = p(sem_num);
+  return res;
+}
+
+
+
+
 
 /*
   sintassi che non conoscevo, a quanto pare in C si può inizializzare un array 
@@ -208,6 +244,10 @@ static uint64 (*syscalls[])(void) = {
 [SYS_set_priority]sys_set_priority,
 [SYS_set_child_priority]sys_set_child_priority,
 [SYS_freemem]sys_freemem,
+[SYS_acquire_sem] sys_acquire_sem,
+[SYS_release_sem]sys_release_sem,
+[SYS_p]sys_p,
+[SYS_v]sys_v,
 };
 
 void

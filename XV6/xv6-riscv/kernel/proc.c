@@ -724,12 +724,8 @@ scheduler(void)
 
       release(&p->lock);
     }
-    // nothing to run; stop running on this core until a (timer) interrupt.
+    // nothing to run; stop running on this core until an interrupt.
     else {
-      // non sembra star bloccando troppo e non è colpa di 
-      // una implementazione errata dello scheduler, hai già
-      // controllato anche con la versione round-robin
-      // intr_off();
       intr_on();
       asm volatile("wfi");
     }

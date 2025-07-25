@@ -46,3 +46,7 @@ entry("coredump");
 entry("set_priority");
 entry("set_child_priority");
 entry("freemem");
+entry("acquire_sem");
+entry("release_sem");
+entry("p");
+entry("v");

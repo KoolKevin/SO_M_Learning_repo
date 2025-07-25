@@ -15,6 +15,9 @@
         "elf.h": "c",
         "fs.h": "c",
         "stdarg.h": "c",
-        "stat.h": "c"
+        "stat.h": "c",
+        "sleeplock.h": "c",
+        "file.h": "c",
+        "syscall.h": "c"
     }
 }

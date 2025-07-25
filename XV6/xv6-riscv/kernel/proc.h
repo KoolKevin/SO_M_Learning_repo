@@ -110,8 +110,8 @@ struct proc {
   struct proc *next_ready_proc;// indice del prossimo processo pronto nella coda
 };
 
-// strutture dati per la gestione delle priorità
-#define NUM_PRIO 8
+
+// aggiunti da me
 
 struct ready_queue {
   // più kernel thread, anche in esecuzione
@@ -122,4 +122,9 @@ struct ready_queue {
   int priority_level;
   struct proc *primo;
   struct proc *ultimo;
+};
+
+struct semaphore {
+    struct spinlock lock;
+    int count;
 };
