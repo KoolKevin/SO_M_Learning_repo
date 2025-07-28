@@ -242,7 +242,7 @@ log_write(struct buf *b)
       break;
   }
   log.lh.block[i] = b->blockno;
-  if (i == log.lh.n) {  // Add new block to log?
+  if (i == log.lh.n) {  // Add new block to log only if not already present (log absorption sopra)
     bpin(b);    // prevents the log cache eviction (until commit)
     log.lh.n++; // reserve a slot in the log on disk; the actual write on the log happens after the commit, for now only in cache
   }

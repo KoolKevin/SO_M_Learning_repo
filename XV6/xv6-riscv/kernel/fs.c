@@ -58,7 +58,10 @@ bzero(int dev, int bno)
   brelse(bp);
 }
 
-// Blocks.
+/*
+ * Block allocator. 
+ * balloc() and bfree() must be called inside a transaction, infatti scrivono dentro al log.
+ */
 
 // Allocate a zeroed disk block.
 // returns 0 if out of disk space.
@@ -69,15 +72,23 @@ balloc(uint dev)
   struct buf *bp;
 
   bp = 0;
-  for(b = 0; b < sb.size; b += BPB){
-    bp = bread(dev, BBLOCK(b, sb));
+  // considers every block, starting at block 0 up to
+  // the number of blocks in the file system (sb.size).
+  // Mi sa che questo loop esterno è troppo largo, se ho bisogno
+  // solamente di leggere la bitmap
+  for(b = 0; b < sb.size; b += BPB){ 
+    // BPB e BBLOCK mi fanno leggere sequenzialmente tutti i blocchi della freemap 
+    bp = bread(dev, BBLOCK(b, sb));   
+
+    // adesso itero su tutti i bit del blocco della freemap corrente
     for(bi = 0; bi < BPB && b + bi < sb.size; bi++){
-      m = 1 << (bi % 8);
-      if((bp->data[bi/8] & m) == 0){  // Is block free?
-        bp->data[bi/8] |= m;  // Mark block in use.
-        log_write(bp);
+      m = 1 << (bi % 8);  // nel cached blocco ho accesso solo a byte -> mi calcolo l'offset del bit all'interno del byte
+      if((bp->data[bi/8] & m) == 0){  // Is block free? (bi/8 == byte in considerazione)
+        bp->data[bi/8] |= m;          // Mark block in use. 
+        log_write(bp);                // write bitmap block
         brelse(bp);
-        bzero(dev, b + bi);
+
+        bzero(dev, b + bi);           // azzera il contenuto del blocco allocato
         return b + bi;
       }
     }
@@ -94,12 +105,12 @@ bfree(int dev, uint b)
   struct buf *bp;
   int bi, m;
 
-  bp = bread(dev, BBLOCK(b, sb));
-  bi = b % BPB;
-  m = 1 << (bi % 8);
-  if((bp->data[bi/8] & m) == 0)
+  bp = bread(dev, BBLOCK(b, sb)); // leggo il bitmap block
+  bi = b % BPB;                   // recupero il bit all'interno del blocco della bitmap da azzerare                
+  m = 1 << (bi % 8);              // offset all'interno del byte
+  if((bp->data[bi/8] & m) == 0)   
     panic("freeing free block");
-  bp->data[bi/8] &= ~m;
+  bp->data[bi/8] &= ~m;           // azzero il blocco e aggiorno
   log_write(bp);
   brelse(bp);
 }

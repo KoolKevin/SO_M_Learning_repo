@@ -3,7 +3,7 @@
 
 
 #define ROOTINO  1   // root i-number
-#define BSIZE 1024  // block size
+#define BSIZE 1024  // block size (a quanto pare in byte. Vedi balloc() e struct buf che salva data come uchar[] )
 
 // Disk layout:
 // [ boot block | super block | log | inode blocks |
