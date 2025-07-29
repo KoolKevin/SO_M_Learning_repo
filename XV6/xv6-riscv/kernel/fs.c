@@ -75,7 +75,9 @@ balloc(uint dev)
   // considers every block, starting at block 0 up to
   // the number of blocks in the file system (sb.size).
   // Mi sa che questo loop esterno è troppo largo, se ho bisogno
-  // solamente di leggere la bitmap
+  // solamente di leggere la bitmap.
+  // Itero i blocchi considerando i byte e non i blockno (penso 
+  // semplificare la logica sotto)
   for(b = 0; b < sb.size; b += BPB){ 
     // BPB e BBLOCK mi fanno leggere sequenzialmente tutti i blocchi della freemap 
     bp = bread(dev, BBLOCK(b, sb));   
@@ -110,7 +112,7 @@ bfree(int dev, uint b)
   m = 1 << (bi % 8);              // offset all'interno del byte
   if((bp->data[bi/8] & m) == 0)   
     panic("freeing free block");
-  bp->data[bi/8] &= ~m;           // azzero il blocco e aggiorno
+  bp->data[bi/8] &= ~m;           // marchio il blocco come libero nella bitmap
   log_write(bp);
   brelse(bp);
 }
@@ -213,6 +215,9 @@ ialloc(uint dev, short type)
   struct buf *bp;
   struct dinode *dip;
 
+  // nota che itero usando l'inumber dato che gli i-node 
+  // sono contigui sul disco
+  // perchè parto da 1?
   for(inum = 1; inum < sb.ninodes; inum++){
     bp = bread(dev, IBLOCK(inum, sb));
     dip = (struct dinode*)bp->data + inum%IPB;
@@ -221,7 +226,7 @@ ialloc(uint dev, short type)
       dip->type = type;
       log_write(bp);   // mark it allocated on the disk
       brelse(bp);
-      return iget(dev, inum);
+      return iget(dev, inum); // inserisci l'inode nella tabella e restituisci la entry
     }
     brelse(bp);
   }
@@ -269,19 +274,19 @@ iget(uint dev, uint inum)
       release(&itable.lock);
       return ip;
     }
-    if(empty == 0 && ip->ref == 0)    // Remember empty slot.
+    if(empty == 0 && ip->ref == 0)    // Remember empty slot for recycling sotto.
       empty = ip;
   }
 
-  // Recycle an inode entry.
   if(empty == 0)
     panic("iget: no inodes");
 
+  // Recycle an entry in the table to allocate the new inode.
   ip = empty;
   ip->dev = dev;
   ip->inum = inum;
   ip->ref = 1;
-  ip->valid = 0;
+  ip->valid = 0; // not read from disk
   release(&itable.lock);
 
   return ip;
@@ -352,23 +357,24 @@ iput(struct inode *ip)
   if(ip->ref == 1 && ip->valid && ip->nlink == 0){
     // inode has no links and no other references: truncate and free.
 
-    // ip->ref == 1 means no other process can have ip locked,
-    // so this acquiresleep() won't block (or deadlock).
+    // ip->ref == 1 (reference owned by the thread calling iput()) 
+    // means no other process can have ip locked, so this acquiresleep()
+    // won't block (or deadlock). 
     acquiresleep(&ip->lock);
 
     release(&itable.lock);
 
     itrunc(ip);
-    ip->type = 0;
+    ip->type = 0; // segno come libero su disco
     iupdate(ip);
-    ip->valid = 0;
+    ip->valid = 0; // segno come da rileggere
 
     releasesleep(&ip->lock);
 
     acquire(&itable.lock);
   }
 
-  ip->ref--;
+  ip->ref--;  // se scende a zero diventa libero nella tabella
   release(&itable.lock);
 }
 
