@@ -24,9 +24,12 @@ struct superblock {
 
 #define FSMAGIC 0x10203040
 
+// queste due costanti limitano la dimensione massima 
+// di un file. In quanto limitano il numero di blocchi
+// di cui un inode può tenere traccia
 #define NDIRECT 12
 #define NINDIRECT (BSIZE / sizeof(uint))
-#define MAXFILE (NDIRECT + NINDIRECT)
+#define MAXFILE (NDIRECT + NINDIRECT) // in blocchi
 
 // On-disk inode structure
 struct dinode {

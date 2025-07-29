@@ -403,6 +403,7 @@ bmap(struct inode *ip, uint bn)
   struct buf *bp;
 
   if(bn < NDIRECT){
+    // se il blocco non è allocato, allocalo
     if((addr = ip->addrs[bn]) == 0){
       addr = balloc(ip->dev);
       if(addr == 0)
@@ -421,10 +422,14 @@ bmap(struct inode *ip, uint bn)
         return 0;
       ip->addrs[NDIRECT] = addr;
     }
+    // leggo l'indirect block
     bp = bread(ip->dev, addr);
     a = (uint*)bp->data;
+
     if((addr = a[bn]) == 0){
       addr = balloc(ip->dev);
+      // aggiorno l'indirect block con un puntatore
+      // al data block appena allocato
       if(addr){
         a[bn] = addr;
         log_write(bp);
@@ -485,23 +490,35 @@ stati(struct inode *ip, struct stat *st)
 // Caller must hold ip->lock.
 // If user_dst==1, then dst is a user virtual address;
 // otherwise, dst is a kernel address.
+//
+// off -> offset in byte all'interno del file
+// n   -> byte da leggere
+// m   -> byte da leggere nell'iterazione corrente
+// tot -> numero di byte letti
 int
 readi(struct inode *ip, int user_dst, uint64 dst, uint off, uint n)
 {
   uint tot, m;
   struct buf *bp;
 
-  if(off > ip->size || off + n < off)
+  if(off > ip->size || off + n < off) // perchè non n < 0???
     return 0;
   if(off + n > ip->size)
-    n = ip->size - off;
+    n = ip->size - off; // leggo il resto
 
+  
   for(tot=0; tot<n; tot+=m, off+=m, dst+=m){
-    uint addr = bmap(ip, off/BSIZE);
+    uint addr = bmap(ip, off/BSIZE); // off/BSIZE == blockno corrente
     if(addr == 0)
       break;
+    
+    // leggo l'intero blocco
     bp = bread(ip->dev, addr);
-    m = min(n - tot, BSIZE - off%BSIZE);
+    // copio fino alla fine del blocco oppure fino 
+    // alla fine dei byte che devo leggere
+    // - off%BSIZE == offset all'interno di un blocco
+    // - la maggior parte delle volte copio BSIZE dato che parto da 0
+    m = min(n - tot, BSIZE - off%BSIZE); 
     if(either_copyout(user_dst, dst, bp->data + (off % BSIZE), m) == -1) {
       brelse(bp);
       tot = -1;
@@ -519,6 +536,9 @@ readi(struct inode *ip, int user_dst, uint64 dst, uint off, uint n)
 // Returns the number of bytes successfully written.
 // If the return value is less than the requested n,
 // there was an error of some kind.
+//
+// off -> offset in byte all'interno del file
+// n   -> byte da leggere
 int
 writei(struct inode *ip, int user_src, uint64 src, uint off, uint n)
 {
@@ -531,7 +551,7 @@ writei(struct inode *ip, int user_src, uint64 src, uint off, uint n)
     return -1;
 
   for(tot=0; tot<n; tot+=m, off+=m, src+=m){
-    uint addr = bmap(ip, off/BSIZE);
+    uint addr = bmap(ip, off/BSIZE); // off/BSIZE == blockno corrente
     if(addr == 0)
       break;
     bp = bread(ip->dev, addr);
@@ -540,7 +560,7 @@ writei(struct inode *ip, int user_src, uint64 src, uint off, uint n)
       brelse(bp);
       break;
     }
-    log_write(bp);
+    log_write(bp); // aggiorno il data block
     brelse(bp);
   }
 

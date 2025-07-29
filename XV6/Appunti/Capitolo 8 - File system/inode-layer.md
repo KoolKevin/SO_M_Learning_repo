@@ -24,7 +24,30 @@ Separating acquisition of inode pointers from locking **helps avoid deadlock** i
 
 Code that **modifies an in-memory inode writes it to disk with _iupdate()_**.
 
+
+
+
+
+
 ### inode-content
+The on-disk inode structure, _struct dinode_, contains a size and an array of block numbers. The inode data is found in the blocks listed in the dinode’s addrs array.
+- The first NDIRECT blocks of data are listed in the first NDIRECT entries in the array; these blocks are called direct blocks.
+- The next NINDIRECT blocks of data are listed not in the inode but in a data block called the indirect block.
+    - The last entry in the addrs array gives the address of the indirect block.
+    
+Thus the first 12 kB (NDIRECT x BSIZE) bytes of a file can be loaded from blocks listed in the inode, while the next 256 kB ( NINDIRECT x BSIZE) bytes can only be loaded after consulting the indirect block. This is a good on-disk representation but a complex one for clients
+
+The function **bmap()** manages the representation of the data blocks so that higher-level routines, such as _readi()_ and _writei()_ do not need to manage this complexity.
+- _bmap()_ returns the disk block number of the bn’th data block for the inode ip. 
+- If ip does not have such a block yet, bmap allocates one.
+- bmap makes it easy for readi and writei to get at an inode’s data.
+
+
+
+
+
+
+
 
 
 
@@ -53,4 +76,10 @@ Code that **modifies an in-memory inode writes it to disk with _iupdate()_**.
     - Code must lock the inode using ilock before reading or writing its metadata or content
 - iunlock()
     - rilascia il lock impegnato
+- bmap()
+    - restituisce l'indirizzo del n-esimo data block dell'inode i
+    - se non è allocato lo alloca
+- readi()/writei()
+    - molto simili a read()/write(), scrivono n byte a partire da un offset
+ 
 
