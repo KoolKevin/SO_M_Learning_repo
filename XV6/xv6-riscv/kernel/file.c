@@ -13,6 +13,10 @@
 #include "stat.h"
 #include "proc.h"
 
+// 'device switch table', tabella di puntatori a funzioni 
+// dei driver dei dispositivi (read/write).
+// I driver stessi registrano le loro funzioni in questa tabella 
+// all'avvio.
 struct devsw devsw[NDEV];
 // tabella dei file aperti di sistema
 struct {

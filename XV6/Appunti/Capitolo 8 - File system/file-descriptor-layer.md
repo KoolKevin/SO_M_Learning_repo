@@ -13,7 +13,7 @@ questo sembra essere pensato più per i user processes che per il kernel
 ### fd-layer
 A cool aspect of the Unix interface is that most resources in Unix are represented as files, including devices such as the console, pipes, and of course, real files. The file descriptor layer is the layer that achieves this uniformity.
 
-Each open file is represented by a _struct file_, which is a **wrapper around either an inode or a pipe, plus an I/O offset**
+Each open file is represented by a _struct file_, which is a **wrapper around either an inode (which can refer to a file, directory or device) or a pipe, plus an I/O offset**
 - **Each call to open creates a new open file** (a new struct file)
     - xv6 non è molto parsimonioso in questo
 - All the open files in the system are kept in a global file table, the ftable.
@@ -35,5 +35,5 @@ The file table has functions to
 - release a reference (fileclose)
     - When a file’s reference count reaches zero, fileclose releases the underlying pipe or inode, according to the type.
 - and read and write data (fileread and filewrite).
-
 - The functions filestat, fileread, and filewrite implement the stat, read, and write operations on files
+    - **NB**: per i device, le letture/scritture vengono effettuate invocando funzioni del corrispettivo **driver** recuperate utilizzando il major-number salvato nell'inode
