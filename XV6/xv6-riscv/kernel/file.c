@@ -14,6 +14,7 @@
 #include "proc.h"
 
 struct devsw devsw[NDEV];
+// tabella dei file aperti di sistema
 struct {
   struct spinlock lock;
   struct file file[NFILE];
@@ -68,11 +69,15 @@ fileclose(struct file *f)
     release(&ftable.lock);
     return;
   }
+
+  // copio il file nella tabella di sistema
   ff = *f;
+  // rilascio il file nella tabella di sistema
   f->ref = 0;
   f->type = FD_NONE;
   release(&ftable.lock);
 
+  // uso la copia per rilasciare le risorse associate al file
   if(ff.type == FD_PIPE){
     pipeclose(ff.pipe, ff.writable);
   } else if(ff.type == FD_INODE || ff.type == FD_DEVICE){
@@ -112,6 +117,7 @@ fileread(struct file *f, uint64 addr, int n)
   if(f->readable == 0)
     return -1;
 
+  // controlla che read utilizzare (pipe, device driver, o inode)
   if(f->type == FD_PIPE){
     r = piperead(f->pipe, addr, n);
   } else if(f->type == FD_DEVICE){
@@ -141,6 +147,7 @@ filewrite(struct file *f, uint64 addr, int n)
   if(f->writable == 0)
     return -1;
 
+  // controlla che write utilizzare (pipe, device driver, o inode)
   if(f->type == FD_PIPE){
     ret = pipewrite(f->pipe, addr, n);
   } else if(f->type == FD_DEVICE){

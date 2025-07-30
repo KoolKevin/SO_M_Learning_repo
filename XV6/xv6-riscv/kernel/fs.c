@@ -363,9 +363,10 @@ iput(struct inode *ip)
     acquiresleep(&ip->lock);
 
     release(&itable.lock);
-
+    // libero i data blocks
     itrunc(ip);
-    ip->type = 0; // segno come libero su disco
+    // segno come libero su disco
+    ip->type = 0; 
     iupdate(ip);
     ip->valid = 0; // segno come da rileggere
 
@@ -595,14 +596,18 @@ dirlookup(struct inode *dp, char *name, uint *poff)
     panic("dirlookup not DIR");
 
   for(off = 0; off < dp->size; off += sizeof(de)){
+    // read the current directory entry
     if(readi(dp, 0, (uint64)&de, off, sizeof(de)) != sizeof(de))
       panic("dirlookup read");
+    
+      // free directory entry
     if(de.inum == 0)
       continue;
+    
     if(namecmp(name, de.name) == 0){
       // entry matches path element
       if(poff)
-        *poff = off;
+        *poff = off; // restituisco anche l'offset della dirent trovata in caso il chiamante la voglia modificare
       inum = de.inum;
       return iget(dp->dev, inum);
     }
@@ -627,16 +632,18 @@ dirlink(struct inode *dp, char *name, uint inum)
   }
 
   // Look for an empty dirent.
+  // - la posso aggiungere in fondo
+  // - oppure posso trovarne una libera prima
   for(off = 0; off < dp->size; off += sizeof(de)){
-    if(readi(dp, 0, (uint64)&de, off, sizeof(de)) != sizeof(de))
+    if(readi(dp, 0, (uint64)&de, off, sizeof(de)) != sizeof(de)) // leggo la current dirent
       panic("dirlink read");
     if(de.inum == 0)
       break;
   }
 
-  strncpy(de.name, name, DIRSIZ);
+  strncpy(de.name, name, DIRSIZ); // se specifico un nome troppo lungo, viene tagliato
   de.inum = inum;
-  if(writei(dp, 0, (uint64)&de, off, sizeof(de)) != sizeof(de))
+  if(writei(dp, 0, (uint64)&de, off, sizeof(de)) != sizeof(de)) // aggiorno la dirent
     return -1;
 
   return 0;
@@ -661,14 +668,19 @@ skipelem(char *path, char *name)
 {
   char *s;
   int len;
-
+  
+  // mi posizioni dopo i '/' all'inizio di un nome
   while(*path == '/')
     path++;
   if(*path == 0)
     return 0;
   s = path;
+
+  // sposto il cursore fino al prossimo '/'
   while(*path != '/' && *path != 0)
     path++;
+  
+  // copio in name il pathelement appena attraversato
   len = path - s;
   if(len >= DIRSIZ)
     memmove(name, s, DIRSIZ);
@@ -676,6 +688,8 @@ skipelem(char *path, char *name)
     memmove(name, s, len);
     name[len] = 0;
   }
+
+  // mi posiziono nuovamente dopo i '/'
   while(*path == '/')
     path++;
   return path;
@@ -691,21 +705,30 @@ namex(char *path, int nameiparent, char *name)
   struct inode *ip, *next;
 
   if(*path == '/')
-    ip = iget(ROOTDEV, ROOTINO);
+    ip = iget(ROOTDEV, ROOTINO); // path assoluto parte dalla root dir
   else
-    ip = idup(myproc()->cwd);
+    ip = idup(myproc()->cwd); // path relativo parte dalla cwd
 
+  // itero su tutti i pathelement con name
+  // se skipelem ritorna 0 significa che ho recuperato l'inode
+  // della foglia del path
   while((path = skipelem(path, name)) != 0){
     ilock(ip);
+
+    // non posso esplorare un qualcosa che non è una directory
     if(ip->type != T_DIR){
       iunlockput(ip);
       return 0;
     }
+
+    // sono all'ultimo nome nel path e devo ritornare l'inode del padre
     if(nameiparent && *path == '\0'){
       // Stop one level early.
       iunlock(ip);
       return ip;
     }
+
+    // recupero l'inode del prossimo livello
     if((next = dirlookup(ip, name, 0)) == 0){
       iunlockput(ip);
       return 0;
@@ -713,10 +736,13 @@ namex(char *path, int nameiparent, char *name)
     iunlockput(ip);
     ip = next;
   }
+
+  // uh?
   if(nameiparent){
     iput(ip);
     return 0;
   }
+
   return ip;
 }
 
