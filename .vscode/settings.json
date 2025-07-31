@@ -19,6 +19,7 @@
         "sleeplock.h": "c",
         "file.h": "c",
         "syscall.h": "c",
-        "virtio.h": "c"
+        "virtio.h": "c",
+        "assert.h": "c"
     }
 }
