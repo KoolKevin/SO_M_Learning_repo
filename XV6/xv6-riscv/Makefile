@@ -117,6 +117,7 @@ $U/_forktest: $U/forktest.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $U/_forktest $U/forktest.o $U/ulib.o $U/usys.o
 	$(OBJDUMP) -S $U/_forktest > $U/forktest.asm
 
+# compila il fs builde
 mkfs/mkfs: mkfs/mkfs.c $K/fs.h $K/param.h
 	gcc -Werror -Wall -I. -o mkfs/mkfs mkfs/mkfs.c
 
@@ -151,8 +152,10 @@ UPROGS=\
 	$U/_test_fork_cow\
 	$U/_my_hello 	# aggiunto
 
+# invoca mkfs.c con fs.img come nome del file 
+# che rappresenterà l'immagine del fs
 fs.img: mkfs/mkfs README $(UPROGS)
-	mkfs/mkfs fs.img README $(UPROGS)
+	mkfs/mkfs fs.img README $(UPROGS) 
 
 -include kernel/*.d user/*.d
 
