@@ -130,25 +130,33 @@ sys_link(void)
     return -1;
 
   begin_op();
+  // recupero l'inode del vecchio nome
   if((ip = namei(old)) == 0){
     end_op();
     return -1;
   }
 
   ilock(ip);
+  // non posso linkar directory
   if(ip->type == T_DIR){
     iunlockput(ip);
     end_op();
     return -1;
   }
 
+  // incremento il numero di link al inode
   ip->nlink++;
   iupdate(ip);
   iunlock(ip);
 
+  // recupero l'inode della directory padre del nuovo nome
   if((dp = nameiparent(new, name)) == 0)
     goto bad;
+  // aggiungo una nuova dirent che punta allo stesso inode nella dir padre
   ilock(dp);
+  // The new parent directory must exist and be on the same device as the existing inode:
+  // - inode numbers only have a unique meaning on a single disk.
+  // - non posso linkare inode across disks 
   if(dp->dev != ip->dev || dirlink(dp, name, ip->inum) < 0){
     iunlockput(dp);
     goto bad;
@@ -176,6 +184,7 @@ isdirempty(struct inode *dp)
   int off;
   struct dirent de;
 
+  // parto dalla terza dirent per saltare . e ..
   for(off=2*sizeof(de); off<dp->size; off+=sizeof(de)){
     if(readi(dp, 0, (uint64)&de, off, sizeof(de)) != sizeof(de))
       panic("isdirempty: readi");
@@ -196,6 +205,7 @@ sys_unlink(void)
   if(argstr(0, path, MAXPATH) < 0)
     return -1;
 
+  // recupero directory padre
   begin_op();
   if((dp = nameiparent(path, name)) == 0){
     end_op();
@@ -208,6 +218,7 @@ sys_unlink(void)
   if(namecmp(name, ".") == 0 || namecmp(name, "..") == 0)
     goto bad;
 
+  // recupero l'inode del file che voglio unlinkare
   if((ip = dirlookup(dp, name, &off)) == 0)
     goto bad;
   ilock(ip);
@@ -219,15 +230,21 @@ sys_unlink(void)
     goto bad;
   }
 
+  // azzero la dirent e aggiorno la directory
   memset(&de, 0, sizeof(de));
   if(writei(dp, 0, (uint64)&de, off, sizeof(de)) != sizeof(de))
     panic("unlink: writei");
   if(ip->type == T_DIR){
-    dp->nlink--;
+    // a quanto pare per un directory nlink è il numero di file che contiene
+    // Ha senso considerando che non possono essere linkate (vedi sys_link)
+    dp->nlink--; 
     iupdate(dp);
   }
   iunlockput(dp);
 
+  // decremento i link al file.
+  // Se nlink scende a 0 e l'unico ref al file rimasto
+  // e quello di questa funzione, iput() cancellerà il file
   ip->nlink--;
   iupdate(ip);
   iunlockput(ip);
@@ -242,17 +259,29 @@ bad:
   return -1;
 }
 
+// sys_link creates a new name for an existing inode. 
+// create creates a new name for a new inode.
+// 
+// It is a generalization of the three file creation system calls:
+// - open with the O_CREATE flag makes a new ordinary file
+// - mkdir makes a new directory
+// - mkdev makes a new device file. 
+//
+// Using create, it is easy to implement 
+// sys_open, sys_mkdir, and sys_mknod
 static struct inode*
 create(char *path, short type, short major, short minor)
 {
   struct inode *ip, *dp;
   char name[DIRSIZ];
 
+  // recupero inode della directory padre
   if((dp = nameiparent(path, name)) == 0)
     return 0;
 
   ilock(dp);
 
+  // controllo se l'inode è già presente
   if((ip = dirlookup(dp, name, 0)) != 0){
     iunlockput(dp);
     ilock(ip);
@@ -262,6 +291,7 @@ create(char *path, short type, short major, short minor)
     return 0;
   }
 
+  // alloco un nuovo inode
   if((ip = ialloc(dp->dev, type)) == 0){
     iunlockput(dp);
     return 0;
@@ -270,7 +300,7 @@ create(char *path, short type, short major, short minor)
   ilock(ip);
   ip->major = major;
   ip->minor = minor;
-  ip->nlink = 1;
+  ip->nlink = 1; // quello della directory padre, vedi sotto
   iupdate(ip);
 
   if(type == T_DIR){  // Create . and .. entries.
@@ -316,6 +346,9 @@ sys_open(void)
 
   begin_op();
 
+  // recupero l'inode del file da aprire
+  // - creandolo (create)
+  // - oppure recuperandolo (namei)
   if(omode & O_CREATE){
     ip = create(path, T_FILE, 0, 0);
     if(ip == 0){
@@ -341,6 +374,9 @@ sys_open(void)
     return -1;
   }
 
+  // alloco un struct file e un fd
+  // - filealloc() alloca una entry nella tabella di sistema
+  // - fdalloc() alloca una entry nella tabella del processo
   if((f = filealloc()) == 0 || (fd = fdalloc(f)) < 0){
     if(f)
       fileclose(f);
@@ -349,6 +385,7 @@ sys_open(void)
     return -1;
   }
 
+  // aggiusto un po' di campi del struct file 
   if(ip->type == T_DEVICE){
     f->type = FD_DEVICE;
     f->major = ip->major;
@@ -360,6 +397,7 @@ sys_open(void)
   f->readable = !(omode & O_WRONLY);
   f->writable = (omode & O_WRONLY) || (omode & O_RDWR);
 
+  // tronco anche il contenuto se necessario
   if((omode & O_TRUNC) && ip->type == T_FILE){
     itrunc(ip);
   }
@@ -367,6 +405,9 @@ sys_open(void)
   iunlock(ip);
   end_op();
 
+  // restituisco fd, che ricordiamo essere
+  // un indice per il file all'interno della
+  // tabella dei file aperti del processo
   return fd;
 }
 
@@ -386,6 +427,11 @@ sys_mkdir(void)
   return 0;
 }
 
+// notare che la creazione di un device file è analoga alla creazione di
+// un qualunque altro file! La differenza sta nel tipo e nella presenza dei
+// major e minor number. Grazie a questi attributi, le chiamate a read() e 
+// e write() veranno redirette alle relative funzioni del driver tramite
+// la device switch table devsw
 uint64
 sys_mknod(void)
 {
@@ -427,7 +473,7 @@ sys_chdir(void)
   iunlock(ip);
   iput(p->cwd);
   end_op();
-  p->cwd = ip;
+  p->cwd = ip; // cambio directory sostituendo con il nuovo inode
   return 0;
 }
 
@@ -443,6 +489,9 @@ sys_exec(void)
     return -1;
   }
   memset(argv, 0, sizeof(argv));
+  // copio gli argomenti uno per volta
+  // argv è un array di stringhe (char* []), devo quindi:
+  // - recuperare l'indirizzo iniziale di ogni stringa
   for(i=0;; i++){
     if(i >= NELEM(argv)){
       goto bad;
@@ -450,19 +499,31 @@ sys_exec(void)
     if(fetchaddr(uargv+sizeof(uint64)*i, (uint64*)&uarg) < 0){
       goto bad;
     }
-    if(uarg == 0){
+    // null terminator trovato, finiti gli argomenti
+    if(uarg == 0){ 
       argv[i] = 0;
       break;
     }
+
+    // mamma mia, alloco una pagina per una stringa di pochi caratteri
+    // la mancanza di un allocatore più granulare si fa sentire qua
     argv[i] = kalloc();
     if(argv[i] == 0)
       goto bad;
+    // copio uarg (user address of i-th arg) dentro ad argv[i]
     if(fetchstr(uarg, argv[i], PGSIZE) < 0)
       goto bad;
   }
 
+
+  
   int ret = exec(path, argv);
 
+
+
+  // libero le pagine allocate per copiare nel kernel gli arogmenti
+  // dato che in exec sono state copiate nella tabella delle pagine
+  // del processo
   for(i = 0; i < NELEM(argv) && argv[i] != 0; i++)
     kfree(argv[i]);
 
@@ -486,6 +547,7 @@ sys_pipe(void)
   if(pipealloc(&rf, &wf) < 0)
     return -1;
   fd0 = -1;
+  // alloco due fd per i due file della pipe 
   if((fd0 = fdalloc(rf)) < 0 || (fd1 = fdalloc(wf)) < 0){
     if(fd0 >= 0)
       p->ofile[fd0] = 0;
@@ -493,6 +555,8 @@ sys_pipe(void)
     fileclose(wf);
     return -1;
   }
+
+  // copio i due fd nella memoria del processo utente
   if(copyout(p->pagetable, fdarray, (char*)&fd0, sizeof(fd0)) < 0 ||
      copyout(p->pagetable, fdarray+sizeof(fd0), (char *)&fd1, sizeof(fd1)) < 0){
     p->ofile[fd0] = 0;

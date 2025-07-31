@@ -354,8 +354,10 @@ iput(struct inode *ip)
 {
   acquire(&itable.lock);
 
+  // inode has no links and no other references: truncate and free.
+  // - succede quando è rimasto solo un processo con un riferimento 
+  //   in memoria a questo inode
   if(ip->ref == 1 && ip->valid && ip->nlink == 0){
-    // inode has no links and no other references: truncate and free.
 
     // ip->ref == 1 (reference owned by the thread calling iput()) 
     // means no other process can have ip locked, so this acquiresleep()

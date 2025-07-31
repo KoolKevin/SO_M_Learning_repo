@@ -25,7 +25,7 @@ The xv6 file system implementation is organized in **seven layers**:
 
 6. The **pathname layer** provides hierarchical path names like /usr/rtm/xv6/fs.c, and resolves them with recursive lookup.
 
-7. The **file descriptor layer** abstracts many Unix resources (e.g., pipes, devices, files, etc.) using the file system interface, simplifying the lives of application programmers.
+7. The **file descriptor layer** abstracts many Unix resources (e.g., pipes, devices, files, etc.) using the file system fd interface, simplifying the lives of application programmers.
 
 
 
